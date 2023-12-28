@@ -43,7 +43,6 @@ func SubmitUrl(w http.ResponseWriter, r *http.Request) {
 	// update shared context with the requestedUrlHeader
 	types.UpdateSharedContext(requestedUrlHeader, requestHostnameHeader)
 
-	//application := types.NewApplication(serverHeader, requestedUrlHeader, "", []string{}, err)
 	application := types.NewApplication(types.Application{HttpServerHeader: serverHeader,
 		HttpRequestedUrl: requestHostnameHeader, Error: err})
 
