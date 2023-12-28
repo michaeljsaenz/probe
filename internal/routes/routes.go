@@ -12,5 +12,6 @@ func RegisterRoutes() {
 	http.HandleFunc("/submit-url/", handlers.SubmitUrl)
 	http.HandleFunc("/button-certificates/", handlers.ButtonCertificates)
 	http.HandleFunc("/button-dns/", handlers.ButtonDNS)
+	http.HandleFunc("/button-ping/", handlers.ButtonPing)
 
 }

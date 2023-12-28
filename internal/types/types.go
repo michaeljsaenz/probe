@@ -19,16 +19,18 @@ type Application struct {
 	HttpRequestedUrl string
 	Certificates     string
 	DNS              []string
+	PingResponses    []string
 	Error            error
 }
 
-func NewApplication(httpServerHeader, httpRequestedUrl, certificates string, dns []string, err error) Application {
+func NewApplication(application Application) Application {
 	return Application{
-		HttpServerHeader: httpServerHeader,
-		HttpRequestedUrl: httpRequestedUrl,
-		Certificates:     certificates,
-		DNS:              dns,
-		Error:            err,
+		HttpServerHeader: application.HttpServerHeader,
+		HttpRequestedUrl: application.HttpRequestedUrl,
+		Certificates:     application.Certificates,
+		DNS:              application.DNS,
+		PingResponses:    application.PingResponses,
+		Error:            application.Error,
 	}
 }
 

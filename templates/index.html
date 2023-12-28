@@ -22,6 +22,15 @@
   <p> {{ .Error }} </p>
 {{ end}}
 
+{{ define "ping" }}
+  {{ range $response := .PingResponses }}
+    {{ if ne $response "" }}
+      <p>{{ $response }}</p>
+    {{ end }}
+  {{ end }}
+  <p> {{ .Error }} </p>
+{{ end}}
+
 {{ define "certificates" }}
   {{ if ne .Certificates "" }}
     <pre>{{.Certificates }}</pre>
@@ -39,8 +48,9 @@
     <link href="/static/sidebars.css"  type="text/css" rel="stylesheet">
     <link href="/static/icons/css/all.min.css" rel="stylesheet">
     <script src="/static/color-modes.js"></script>
-    <script src="https://unpkg.com/htmx.org@1.9.2" integrity="sha384-L6OqL9pRWyyFU3+/bjdSri+iIphTN/bvYyM37tICVyOJkWZLpP2vGn6VUEXgzg6h" crossorigin="anonymous"></script>
-    <title>pr🔍be</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+    <title>probe</title>
+    <link rel="icon" href="/static/icons/favicon.svg" type="image/x-icon">
   </head>
   <body>
 
@@ -148,8 +158,8 @@
                   </div>
                   <div class="col-4">
                   <button type="submit" class="btn btn-secondary custom-hover-color-change mt-2">
-                      <span class="spinner-border spinner-border-sm htmx-indicator" id="spinner" role="status" aria-hidden="true"></span>
                       Submit
+                      <span class="spinner-border spinner-border-sm htmx-indicator" id="spinner" role="status" aria-hidden="true"></span>
                   </button>
                   </div>
                 </div>
@@ -160,22 +170,29 @@
   <div class="container">
       <div class="col-12">
               <button type="button" class="btn btn-secondary btn-md custom-hover-color-change" 
-              hx-post="/button-certificates/"
-              hx-target="#main-display-box" 
-              hx-swap="innerHTML transition:true"
-              hx-indicator="#btnspinner-certificates">
-              <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinnercertificates" role="status" aria-hidden="true"></span>
+                hx-post="/button-certificates/"
+                hx-target="#main-display-box" 
+                hx-swap="innerHTML transition:true"
+                hx-indicator="#btnspinner-certificates">
                 Certificates
+                <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinner-certificates" role="status" aria-hidden="true"></span>
               </button>
               <button type="button" class="btn btn-secondary btn-md custom-hover-color-change" 
-              hx-post="/button-dns/"
-              hx-target="#main-display-box" 
-              hx-swap="innerHTML transition:true"
-              hx-indicator="#btnspinner-dns">
-              <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinner-dns" role="status" aria-hidden="true"></span>
-               DNS Lookup
+                hx-post="/button-dns/"
+                hx-target="#main-display-box" 
+                hx-swap="innerHTML transition:true"
+                hx-indicator="#btnspinner-dns">
+                DNS Lookup
+                <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinner-dns" role="status" aria-hidden="true"></span>
               </button>
-              <button type="button" class="btn btn-secondary btn-lg custom-hover-color-change" >Small button</button>
+              <button type="button" class="btn btn-secondary btn-md custom-hover-color-change" 
+                hx-post="/button-ping/"
+                hx-target="#main-display-box" 
+                hx-swap="innerHTML transition:true"
+                hx-indicator="#btnspinner-ping">
+                Ping
+                <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinner-ping" role="status" aria-hidden="true"></span>
+              </button>
               <button type="button" class="btn btn-secondary btn-lg custom-hover-color-change" >Small button</button>
               <button type="button" class="btn btn-secondary btn-lg custom-hover-color-change" >Small button</button>
               <div class="mt-4 custom-container" id="main-display-box">

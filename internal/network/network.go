@@ -8,7 +8,12 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strings"
+	"time"
+
+	"golang.org/x/net/icmp"
+	"golang.org/x/net/ipv4"
 )
 
 func GetUrl(url string) (serverHeader, requestUrlHeader, requestHostnameHeader string, err error) {
@@ -98,4 +103,75 @@ func GetDNS(hostname string) ([]string, error) {
 	}
 
 	return ipv4Addresses, nil
+}
+
+func Ping(hostname string) (string, error) {
+	ip, err := net.ResolveIPAddr("ip4", hostname)
+	if err != nil {
+		return "", fmt.Errorf("error resolving IP address: %w", err)
+	}
+
+	// create connection to send and receive ICMP messages
+	conn, err := icmp.ListenPacket("udp4", "0.0.0.0")
+	if err != nil {
+		return "", fmt.Errorf("error creating ICMP connection: %w", err)
+	}
+	defer conn.Close()
+
+	// construct icmp messsage
+	msg := icmp.Message{
+		Type: ipv4.ICMPTypeEcho, Code: 0,
+		Body: &icmp.Echo{
+			ID: os.Getpid() & 0xffff, Seq: 1, // associate Echo Requests with Echo Replies
+		},
+	}
+
+	// serialize the icmp message
+	msgBytes, err := msg.Marshal(nil)
+	if err != nil {
+		return "", fmt.Errorf("error marshaling ICMP message: %w", err)
+	}
+
+	sendTime := time.Now()
+
+	// send the ICMP message to the listening connection
+	_, err = conn.WriteTo(msgBytes, &net.UDPAddr{IP: net.ParseIP(ip.String())})
+	if err != nil {
+		return "", fmt.Errorf("error sending ICMP message: %w", err)
+	}
+
+	// deadline for receiving the icmp reply
+	err = conn.SetReadDeadline(time.Now().Add(time.Second * 3))
+	if err != nil {
+		return "", fmt.Errorf("error setting read deadline: %w", err)
+	}
+
+	// retry read icmp reply
+	reply := make([]byte, 1500)
+	numBytes, _, err := conn.ReadFrom(reply)
+	if err != nil {
+		return "", fmt.Errorf("error reading ICMP reply: %w", err)
+	}
+
+	// calculate RTT
+	rtt := time.Since(sendTime)
+	rttMilliseconds := rtt.Seconds() * 1000.0
+	rttString := fmt.Sprintf("(Round Trip Time: %.3f ms)", rttMilliseconds)
+
+	parsedReply, err := icmp.ParseMessage(1, reply[:numBytes])
+	if err != nil {
+		return "", fmt.Errorf("error on ICMP ParseMessage: %w", err)
+	}
+
+	switch parsedReply.Code {
+	case 0:
+		return fmt.Sprintf("Got reply from %s %s", hostname, rttString), nil
+	case 3:
+		return fmt.Sprintf("Host %s is unreachable", hostname), nil
+	case 11:
+		return fmt.Sprintf("Time exceeded attempting to reach host %s", hostname), nil
+	default:
+		return fmt.Sprintf("Host %s is unreachable", hostname), nil
+	}
+
 }

@@ -43,7 +43,9 @@ func SubmitUrl(w http.ResponseWriter, r *http.Request) {
 	// update shared context with the requestedUrlHeader
 	types.UpdateSharedContext(requestedUrlHeader, requestHostnameHeader)
 
-	application := types.NewApplication(serverHeader, requestedUrlHeader, "", []string{}, err)
+	//application := types.NewApplication(serverHeader, requestedUrlHeader, "", []string{}, err)
+	application := types.NewApplication(types.Application{HttpServerHeader: serverHeader,
+		HttpRequestedUrl: requestHostnameHeader, Error: err})
 
 	if err == nil && url != "" {
 		application.HttpRequestedUrl = "HTTP Requested URL: " + requestedUrlHeader
@@ -72,7 +74,8 @@ func ButtonCertificates(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	application := types.NewApplication("", customValues.URL, certificates, []string{}, err)
+	application := types.NewApplication(types.Application{HttpRequestedUrl: customValues.URL,
+		Certificates: certificates, Error: err})
 
 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
 
@@ -95,9 +98,37 @@ func ButtonDNS(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	application := types.NewApplication("", "", "", ips, err)
+	application := types.NewApplication(types.Application{DNS: ips, Error: err})
 
 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
 
 	tmpl.ExecuteTemplate(w, "dns-lookup", application)
+}
+
+func ButtonPing(w http.ResponseWriter, r *http.Request) {
+	types.ContextLock.Lock()
+	defer types.ContextLock.Unlock()
+
+	var err error
+	var pingResponse string
+	var pingResponses []string
+
+	// retrieve value from shared context
+	customValues, ok := types.SharedContext.Value(types.ContextKey).(types.CustomContextValues)
+	if ok && customValues.Hostname != "" {
+		for i := 0; i < 4; i++ {
+			pingResponse, err = network.Ping(customValues.Hostname)
+			if err != nil {
+				log.Printf("error: %v", err)
+			}
+			pingResponses = append(pingResponses, pingResponse)
+		}
+
+	}
+
+	application := types.NewApplication(types.Application{PingResponses: pingResponses})
+
+	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+
+	tmpl.ExecuteTemplate(w, "ping", application)
 }

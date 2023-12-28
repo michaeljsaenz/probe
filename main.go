@@ -10,7 +10,7 @@ import (
 func main() {
 	routes.RegisterRoutes()
 
-	server := http.Server{Addr: ":8000"}
+	server := http.Server{Addr: ":8001"}
 	log.Fatal(server.ListenAndServe())
 
 	defer server.Close()
