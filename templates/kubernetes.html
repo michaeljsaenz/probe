@@ -1,0 +1,15 @@
+<!-- start of template -->
+<!-- end of template -->
+<!-- center buttons-->
+<div class="row g-2 mt-0" id="main-buttons">
+    <div class="col-lg-2">
+        <button type="button" class="btn btn-secondary btn-md custom-hover-color-change w-100"
+          hx-post="/button-ping/"
+          hx-target="#main-display-box" 
+          hx-swap="innerHTML transition:true"
+          hx-indicator="#btnspinner-ping">
+          K8s placeholder
+          <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinner-ping" role="status" aria-hidden="true"></span>
+        </button>
+    </div>
+</div>

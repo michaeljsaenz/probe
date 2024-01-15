@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/michaeljsaenz/traceroute"
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
 )
@@ -174,4 +175,52 @@ func Ping(hostname string) (string, error) {
 		return fmt.Sprintf("Host %s is unreachable", hostname), nil
 	}
 
+}
+
+func Traceroute(hostname string) (hops string, err error) {
+	opts := traceroute.TracerouteOptions{}
+	opts.SetMaxHops(30)
+
+	ipAddr, err := net.ResolveIPAddr("ip", hostname)
+	if err != nil {
+		return
+	}
+
+	c := make(chan traceroute.TracerouteHop)
+
+	var builder strings.Builder
+	hopStart := fmt.Sprintf("traceroute to %v (%v), %v hops max, %v byte packets\n", hostname, ipAddr, opts.MaxHops(), opts.PacketSize())
+	builder.WriteString(hopStart)
+	go func() {
+		for {
+			hop, ok := <-c
+			if !ok {
+				return
+			}
+			nextHop := printHop(hop)
+			builder.WriteString(nextHop)
+		}
+	}()
+	_, err = traceroute.Traceroute(hostname, &opts, c)
+	if err != nil {
+		return hopStart, fmt.Errorf("error: %w", err)
+	}
+
+	return builder.String(), nil
+}
+
+func printHop(hop traceroute.TracerouteHop) (nextHop string) {
+	addr := fmt.Sprintf("%d.%d.%d.%d", hop.Address[0], hop.Address[1], hop.Address[2], hop.Address[3])
+
+	hostOrAddr := addr
+	if hop.Host != "" {
+		hostOrAddr = hop.Host
+	}
+	if hop.Success {
+		nextHop = fmt.Sprintf("%-3d %v (%v) %s\n", hop.TTL, hostOrAddr, addr, hop.ElapsedTime)
+		return nextHop
+	} else {
+		nextHop = fmt.Sprintf("%-3d *\n", hop.TTL)
+		return nextHop
+	}
 }

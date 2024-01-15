@@ -20,6 +20,7 @@ type Application struct {
 	Certificates     string
 	DNS              []string
 	PingResponses    []string
+	TracerouteResult string
 	Error            error
 }
 
@@ -31,6 +32,7 @@ func NewApplication(application Application) Application {
 		DNS:              application.DNS,
 		PingResponses:    application.PingResponses,
 		Error:            application.Error,
+		TracerouteResult: application.TracerouteResult,
 	}
 }
 

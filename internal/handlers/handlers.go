@@ -10,12 +10,15 @@ import (
 	"github.com/michaeljsaenz/probe/internal/types"
 )
 
+// //go:embed templates/*
+// var templateFS embed.FS
+
 func StaticFiles() {
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 }
 
-func BaseUrl(w http.ResponseWriter, r *http.Request) {
+func RootTemplate(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
 	err := tmpl.Execute(w, nil)
 	if err != nil {
@@ -24,7 +27,27 @@ func BaseUrl(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SubmitUrl(w http.ResponseWriter, r *http.Request) {
+func IstioTemplate(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles("templates/istio.html"))
+	err := tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func KubernetesTemplate(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseFiles("templates/kubernetes.html"))
+	err := tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func ButtonSubmit(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var serverHeader, requestedUrlHeader, requestHostnameHeader string
 
@@ -125,9 +148,32 @@ func ButtonPing(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	application := types.NewApplication(types.Application{PingResponses: pingResponses})
+	application := types.NewApplication(types.Application{PingResponses: pingResponses, Error: err})
 
 	tmpl := template.Must(template.ParseFiles("templates/index.html"))
 
 	tmpl.ExecuteTemplate(w, "ping", application)
+}
+
+func ButtonTraceroute(w http.ResponseWriter, r *http.Request) {
+	types.ContextLock.Lock()
+	defer types.ContextLock.Unlock()
+
+	var err error
+	var tracerouteResult string
+
+	// retrieve value from shared context
+	customValues, ok := types.SharedContext.Value(types.ContextKey).(types.CustomContextValues)
+	if ok && customValues.Hostname != "" {
+		tracerouteResult, err = network.Traceroute(customValues.Hostname)
+		if err != nil {
+			log.Printf("%v", err)
+		}
+	}
+
+	application := types.NewApplication(types.Application{TracerouteResult: tracerouteResult, Error: err})
+
+	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+
+	tmpl.ExecuteTemplate(w, "traceroute", application)
 }
