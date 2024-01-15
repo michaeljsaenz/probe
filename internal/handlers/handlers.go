@@ -10,9 +10,6 @@ import (
 	"github.com/michaeljsaenz/probe/internal/types"
 )
 
-// //go:embed templates/*
-// var templateFS embed.FS
-
 func StaticFiles() {
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
