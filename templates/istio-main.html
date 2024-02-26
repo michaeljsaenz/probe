@@ -1,0 +1,50 @@
+<!-- start of template -->
+<!-- main -->
+    <div class="container" id="main-container">
+      <div class="col-12">
+        <div class="mt-4">
+<!-- search input-->
+        <div class="row">
+            <div class="col-md-8 mb-2">
+              <form hx-post="/button-submit/" hx-target="#main-display-box" hx-swap="innerHTML transition:true" hx-indicator="#spinner" class="d-flex">
+                  <input type="text" name="url" id="button-submit" class="form-control" placeholder="Enter Pod"/>
+                  <div class="col-md-2 ms-2">
+                      <button type="submit" class="btn btn-secondary custom-hover-color-change w-100">
+                          Submit
+                          <span class="spinner-border spinner-border-sm htmx-indicator" id="spinner" role="status" aria-hidden="true"></span>
+                      </button>
+                  </div>
+              </form>
+          </div>
+          <div class="col-md-4 mb-2 d-flex justify-content-end">
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Namespace
+                </button>
+                <ul class="dropdown-menu dropdown-menu-scroll" aria-labelledby="dropdownMenuButton1">
+                    {{ range .K8sNamespaces }}
+                        <li><a class="dropdown-item" href="#" hx-post="/dropdown-namespace-selection/" hx-trigger="click" hx-target="#dropdownMenuButton1" hx-vals='{"namespace": "{{ . }}" }'>{{ . }}</a></li>
+                    {{ end }}
+                </ul>
+            </div>
+          </div>
+          </div>
+<!-- center buttons-->
+            <div class="row g-2 mt-0" id="main-buttons">
+                <div class="col-lg-2">
+                    <button type="button" class="btn btn-secondary btn-md custom-hover-color-change w-100"
+                      hx-post="/button-ping/"
+                      hx-target="#main-display-box" 
+                      hx-swap="outterHTML transition:true"
+                      hx-indicator="#btnspinner-ping">
+                      Istio placeholder
+                      <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinner-ping" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+<!-- center display -->
+          <div class="mt-5 custom-container" id="main-display-box"></div>
+        </div>
+      </div>
+    </div>
+<!-- end of template -->

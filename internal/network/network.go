@@ -17,10 +17,11 @@ import (
 	"golang.org/x/net/ipv4"
 )
 
-func GetUrl(url string) (serverHeader, requestUrlHeader, requestHostnameHeader string, err error) {
+func GetUrl(url string) (serverHeader, requestUrlHeader,
+	requestHostnameHeader, requestResponseStatus string, err error) {
 	resp, err := http.Get("https://" + url)
 	if err != nil {
-		return "", "", "", fmt.Errorf("%v", err)
+		return "", "", "", "", fmt.Errorf("%v", err)
 	}
 
 	serverHeader = resp.Header.Get("Server")
@@ -38,7 +39,12 @@ func GetUrl(url string) (serverHeader, requestUrlHeader, requestHostnameHeader s
 		requestHostnameHeader = "no value provided"
 	}
 
-	return serverHeader, requestUrlHeader, requestHostnameHeader, nil
+	requestResponseStatus = resp.Status
+	if requestResponseStatus == "" {
+		requestResponseStatus = "no value provided"
+	}
+
+	return serverHeader, requestUrlHeader, requestHostnameHeader, requestResponseStatus, nil
 }
 
 func GetCertificates(url string) (certificates string, err error) {

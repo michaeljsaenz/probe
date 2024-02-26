@@ -1,22 +1,37 @@
 package handlers
 
 import (
+	"embed"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/michaeljsaenz/probe/internal/k8s"
 	"github.com/michaeljsaenz/probe/internal/network"
 	"github.com/michaeljsaenz/probe/internal/types"
+	"k8s.io/client-go/kubernetes"
 )
 
-func StaticFiles() {
-	fs := http.FileServer(http.Dir("static"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
+func StaticFiles(httpFS embed.FS) {
+	types.UpdateSharedContextFS(httpFS)
+
+	http.Handle("/static/", http.FileServer(http.FS(httpFS)))
 }
 
 func RootTemplate(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	var fs embed.FS
+
+	// retrieve embed.FS from shared context
+	customValues, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValues.HttpFS
+	}
+
+	// use embed.FS to read/parse the template file
+	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+
 	err := tmpl.Execute(w, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -24,29 +39,83 @@ func RootTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func IstioTemplate(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/istio.html"))
+func NetworkMainTemplate(w http.ResponseWriter, r *http.Request) {
+	var fs embed.FS
+
+	// retrieve embed.FS from shared context
+	customValues, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValues.HttpFS
+	}
+
+	// use embed.FS to read/parse the template file
+	tmpl := template.Must(template.ParseFS(fs, "templates/network-main.html"))
+
 	err := tmpl.Execute(w, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 }
 
-func KubernetesTemplate(w http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.ParseFiles("templates/kubernetes.html"))
-	err := tmpl.Execute(w, nil)
+func IstioMainTemplate(w http.ResponseWriter, r *http.Request) {
+	var fs embed.FS
+	var err error
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/istio-main.html"))
+
+	err = tmpl.Execute(w, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
 
+func KubernetesMainTemplate(w http.ResponseWriter, r *http.Request) {
+	var fs embed.FS
+	var err error
+	var clientset *kubernetes.Clientset
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	//retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+
+	}
+
+	// retrieve namespaces
+	namespaces, err := k8s.GetNamespaces(clientset)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+
+	application := types.NewApplication(types.Application{K8sNamespaces: namespaces, Error: err})
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes-main.html"))
+
+	err = tmpl.Execute(w, application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func ButtonSubmit(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var serverHeader, requestedUrlHeader, requestHostnameHeader string
+	var fs embed.FS
+	var serverHeader, requestedUrlHeader, requestHostnameHeader, requestResponseStatus string
 
 	url := r.PostFormValue("url")
 
@@ -54,7 +123,7 @@ func ButtonSubmit(w http.ResponseWriter, r *http.Request) {
 	url = strings.TrimPrefix(url, "https://")
 
 	if url != "" {
-		serverHeader, requestedUrlHeader, requestHostnameHeader, err = network.GetUrl(url)
+		serverHeader, requestedUrlHeader, requestHostnameHeader, requestResponseStatus, err = network.GetUrl(url)
 		if err != nil {
 			log.Printf("error: %v", err)
 		}
@@ -64,16 +133,27 @@ func ButtonSubmit(w http.ResponseWriter, r *http.Request) {
 	types.UpdateSharedContext(requestedUrlHeader, requestHostnameHeader)
 
 	application := types.NewApplication(types.Application{HttpServerHeader: serverHeader,
-		HttpRequestedUrl: requestHostnameHeader, Error: err})
+		HttpRequestedUrl: requestHostnameHeader, HttpResponseStatus: requestResponseStatus, Error: err})
 
 	if err == nil && url != "" {
 		application.HttpRequestedUrl = "HTTP Requested URL: " + requestedUrlHeader
+		application.HttpResponseStatus = "HTTP Response status: " + requestResponseStatus
 		application.HttpServerHeader = "HTTP Server header: " + serverHeader
 	}
 
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	// retrieve embed.FS from shared context
+	customValues, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValues.HttpFS
+	}
 
-	tmpl.ExecuteTemplate(w, "submit", application)
+	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+
+	err = tmpl.ExecuteTemplate(w, "submit", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 }
 
@@ -96,9 +176,21 @@ func ButtonCertificates(w http.ResponseWriter, r *http.Request) {
 	application := types.NewApplication(types.Application{HttpRequestedUrl: customValues.URL,
 		Certificates: certificates, Error: err})
 
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	var fs embed.FS
 
-	tmpl.ExecuteTemplate(w, "certificates", application)
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+
+	err = tmpl.ExecuteTemplate(w, "certificates", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func ButtonDNS(w http.ResponseWriter, r *http.Request) {
@@ -119,9 +211,22 @@ func ButtonDNS(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{DNS: ips, Error: err})
 
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	var fs embed.FS
 
-	tmpl.ExecuteTemplate(w, "dns-lookup", application)
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+
+	err = tmpl.ExecuteTemplate(w, "dns-lookup", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }
 
 func ButtonPing(w http.ResponseWriter, r *http.Request) {
@@ -147,9 +252,21 @@ func ButtonPing(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{PingResponses: pingResponses, Error: err})
 
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	var fs embed.FS
 
-	tmpl.ExecuteTemplate(w, "ping", application)
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+
+	err = tmpl.ExecuteTemplate(w, "ping", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func ButtonTraceroute(w http.ResponseWriter, r *http.Request) {
@@ -170,7 +287,86 @@ func ButtonTraceroute(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{TracerouteResult: tracerouteResult, Error: err})
 
-	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	var fs embed.FS
 
-	tmpl.ExecuteTemplate(w, "traceroute", application)
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+
+	err = tmpl.ExecuteTemplate(w, "traceroute", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func DropdownNamespaceSelection(w http.ResponseWriter, r *http.Request) {
+	var clientset *kubernetes.Clientset
+
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Failed to parse form data", http.StatusInternalServerError)
+		return
+	}
+
+	namespace := r.FormValue("namespace")
+
+	//retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+	}
+
+	types.UpdateSharedContextK8s(clientset, namespace)
+
+	application := types.NewApplication(types.Application{K8sSelectedNamespace: namespace, Error: err})
+
+	fmt.Fprintf(w, "%s", application.K8sSelectedNamespace)
+
+}
+
+func ButtonGetPods(w http.ResponseWriter, r *http.Request) {
+	var clientset *kubernetes.Clientset
+	var namespace string
+	var fs embed.FS
+
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Failed to parse form data", http.StatusInternalServerError)
+		return
+	}
+
+	//retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+		namespace = customValues.Namespace
+
+	}
+
+	pods, err := k8s.GetPodsInNamespace(clientset, namespace)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+
+	application := types.NewApplication(types.Application{K8sPods: pods, Error: err})
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes-main.html"))
+
+	err = tmpl.ExecuteTemplate(w, "get-pods", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 }

@@ -3,10 +3,15 @@
   {{ if ne .HttpRequestedUrl "" }}
     <p> {{ .HttpRequestedUrl }} </p>
   {{ end }}
+  {{ if ne .HttpResponseStatus "" }}
+    <p> {{ .HttpResponseStatus }} </p>
+  {{ end }}
   {{ if ne .HttpServerHeader "" }}
     <p> {{ .HttpServerHeader }} </p>
   {{ end }}
-  <p> {{ .Error }} </p>
+  {{ if .Error }}
+    <p> {{ .Error }} </p>
+  {{ end}}
 {{ end }}
 
 {{ define "dns-lookup" }}
@@ -15,7 +20,9 @@
      <li><p>{{ $ip }}</p></li>
     </ul>
   {{ end }}
-  <p> {{ .Error }} </p>
+  {{ if .Error }}
+    <p> {{ .Error }} </p>
+  {{ end}}
 {{ end}}
 
 {{ define "ping" }}
@@ -32,15 +39,28 @@
   {{ if ne .Certificates "" }}
     <pre>{{.Certificates }}</pre>
   {{ end }}
-  <p> {{ .Error }} </p>
+  {{ if .Error }}
+    <p> {{ .Error }} </p>
+  {{ end}}
 {{ end }}
 
 {{ define "traceroute" }}
   {{ if ne .TracerouteResult "" }}
     <pre>{{.TracerouteResult }}</pre>
   {{ end }}
-  <p> {{ .Error }} </p>
+  {{ if .Error }}
+    <p> {{ .Error }} </p>
+  {{ end}}
 {{ end }}
+
+{{ define "namespaces" }}
+  {{ range $ns := .K8sNamespaces }}
+     <pre>{{ $ns }}</pre>
+  {{ end }}
+  {{ if .Error }}
+    <p> {{ .Error }} </p>
+  {{ end}}
+{{ end}}
 <!-- end of template -->
 <!DOCTYPE html>
 <html lang="en">
@@ -62,29 +82,43 @@
 <main class="d-flex flex-nowrap">
     <div class="b-example-divider b-example-vr"></div>
     <div class="flex-shrink-0 p-3" style="width: 280px;">
-        <div class="d-flex align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom custom-link-body-emphasis">
+        <a href="/" class="d-flex align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom custom-link-body-emphasis">
             <div class="inline-container">
                 <span class="specific-icon-text">pr</span>
                 <i class="specific-icon fa-solid fa-magnifying-glass"></i>
                 <span class="specific-icon-text">be</span>
             </div>
-        </div>
-        <a href="/" class="d-flex align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom my-4 custom-link-body-emphasis-menu">
-            &#8962;
         </a>
-        <a href="/" class="d-flex align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom custom-link-body-emphasis-menu"
+        <a href="/" class="d-flex flex-column align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom"
           hx-trigger="click"
-          hx-post="/istio/"
-          hx-target="#main-buttons" 
-          hx-swap="innerHTML transition:true">
-            istio
+          hx-post="/network-main/"
+          hx-target="#main-container" 
+          hx-swap="outterHTML transition:true">
+          <div>
+            <img src="/static/icons/probe-icon.png" alt="Probe Icon" class="icon-grow" style="width: 84px; height: 84px; display: inline-block;">
+          </div>
+          <div class="small-text">network</div>
         </a>
-        <a href="/" class="d-flex align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom custom-link-body-emphasis-menu"
+        <a href="#" class="d-flex flex-column align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom"
           hx-trigger="click"
-          hx-post="/kubernetes/"
-          hx-target="#main-buttons" 
-          hx-swap="innerHTML transition:true">
-            kubernetes
+          hx-post="/istio-main/"
+          hx-target="#main-container" 
+          hx-swap="outterHTML transition:true">
+          <div>
+            <img src="/static/icons/istio-icon-blue.png" alt="Istio Icon" class="icon-grow" style="width: 84px; height: 84px; display: inline-block;">
+          </div>
+          <div class="small-text">istio</div>
+        </a>
+        </a>
+        <a href="#" class="d-flex flex-column align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom"
+          hx-trigger="click"
+          hx-post="/kubernetes-main/"
+          hx-target="#main-container"
+          hx-swap="outterHTML transition:true">
+          <div>
+            <img src="/static/icons/kubernetes-icon-blue.png" alt="Kubernetes Icon" class="icon-grow" style="width: 84px; height: 84px; display: inline-block;">
+          </div>
+          <div class="small-text">kubernetes</div>
         </a>
     </div>
     <div class="b-example-divider b-example-vr"></div>
@@ -124,67 +158,19 @@
         </li>
       </ul>
     </div>
-<!-- main -->
-    <div class="container" id="main-container">
-      <div class="col-12">
+<!-- main --><!-- page load -->
+    <div class="container" id="main-container"
+      hx-post="/network-main/"
+      hx-target="#main-container" 
+      hx-trigger="load" 
+      hx-swap="innerHTML">
+      <div class="col-2">
         <div class="mt-4">
 <!-- search input-->
-            <div class="col-md-8 mb-2">
-              <form hx-post="/button-submit/" hx-target="#main-display-box" hx-swap="innerHTML transition:true" hx-indicator="#spinner" class="d-flex">
-                  <input type="text" name="url" id="button-submit" class="form-control" placeholder="Enter URL"/>
-                  <div class="col-md-2 ms-2">
-                      <button type="submit" class="btn btn-secondary custom-hover-color-change w-100">
-                          Submit
-                          <span class="spinner-border spinner-border-sm htmx-indicator" id="spinner" role="status" aria-hidden="true"></span>
-                      </button>
-                  </div>
-              </form>
-          </div>
+
 <!-- center buttons-->
-          <div class="row g-2 mt-2" id="main-buttons">
-              <div class="col-lg-2">
-                  <button type="button" class="btn btn-secondary btn-md custom-hover-color-change w-100"
-                    hx-post="/button-certificates/"
-                    hx-target="#main-display-box" 
-                    hx-swap="innerHTML transition:true"
-                    hx-indicator="#btnspinner-certificates">
-                    Certificates
-                    <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinner-certificates" role="status" aria-hidden="true"></span>
-                  </button>
-              </div>
-              <div class="col-lg-2">
-                  <button type="button" class="btn btn-secondary btn-md custom-hover-color-change w-100" 
-                    hx-post="/button-dns/"
-                    hx-target="#main-display-box" 
-                    hx-swap="innerHTML transition:true"
-                    hx-indicator="#btnspinner-dns">
-                    DNS Lookup
-                    <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinner-dns" role="status" aria-hidden="true"></span>
-                  </button>
-              </div>
-              <div class="col-lg-2">
-                  <button type="button" class="btn btn-secondary btn-md custom-hover-color-change w-100" 
-                    hx-post="/button-ping/"
-                    hx-target="#main-display-box" 
-                    hx-swap="innerHTML transition:true"
-                    hx-indicator="#btnspinner-ping">
-                    Ping
-                    <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinner-ping" role="status" aria-hidden="true"></span>
-                  </button>
-              </div>
-              <div class="col-lg-2">
-                  <button type="button" class="btn btn-secondary btn-md custom-hover-color-change w-100" 
-                    hx-post="/button-traceroute/"
-                    hx-target="#main-display-box" 
-                    hx-swap="innerHTML transition:true"
-                    hx-indicator="#btnspinner-traceroute">
-                    Traceroute
-                    <span class="spinner-border spinner-border-sm htmx-indicator" id="btnspinner-traceroute" role="status" aria-hidden="true"></span>
-                  </button>
-              </div>
-            </div>
-<!-- center display-->
-          <div class="mt-5 custom-container" id="main-display-box"></div>
+
+<!-- center display -->
         </div>
       </div>
     </div>

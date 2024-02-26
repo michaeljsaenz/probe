@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"log"
 	"net/http"
 
@@ -8,10 +9,13 @@ import (
 	"github.com/michaeljsaenz/probe/internal/utils"
 )
 
-func main() {
-	routes.RegisterRoutes()
+//go:embed static/* templates/*
+var fs embed.FS
 
-	serverPort := "8082"
+func main() {
+	routes.RegisterRoutes(fs)
+
+	serverPort := "8099"
 	server := http.Server{Addr: ":" + serverPort}
 
 	go func() {

@@ -100,10 +100,18 @@
     color: #fff;
   }
 
-  .custom-link-body-emphasis:hover .specific-icon-text {
-  color: #2AAA8A; 
+  .custom-link-body-emphasis .specific-icon-text {
+  color: #6c757d; 
   }
 
+  .custom-link-body-emphasis .specific-icon {
+    color: #6c757d; 
+    }
+
+  .custom-link-body-emphasis:hover .specific-icon-text {
+    color: #2AAA8A; 
+    }
+  
   .custom-link-body-emphasis:hover .specific-icon {
     color: #2AAA8A; 
     }
@@ -120,7 +128,7 @@
   
 .inline-container { 
   display: flex;
-  align-items: center; /* Center items vertically */
+  align-items: center;
 }
 
 .specific-icon {
@@ -132,5 +140,42 @@
 
 .specific-icon-text {
   font-size: 2em;
-  /* margin-right: 0.2em; Adjust the margin to bring text closer to the icon */
 }
+
+.icon-grow {
+  transition: transform 0.3s ease;
+}
+
+.icon-grow:hover {
+  transform: scale(1.2);
+}
+
+.small-text {
+  color: #6c757d; 
+  font-size: 12px;
+}
+
+.small-text:hover {
+  color: #2AAA8A;  
+}
+
+.btn.dropdown-toggle:hover,
+.btn.dropdown-toggle:focus {
+    background-color: #2AAA8A;
+    border-color:  #2AAA8A;
+}
+
+.dropdown-menu-scroll {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.dropdown-menu .dropdown-item:focus,
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item.active {
+    background-color: #2AAA8A;
+}
+
+    .min-width-120 {
+        min-width: 120px;
+    }
