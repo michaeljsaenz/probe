@@ -8,6 +8,18 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+type PodDetail struct {
+	PodStatus     string
+	PodAge        string
+	PodNode       string
+	PodContainers []string
+}
+
+type K8sNode struct {
+	Name   string
+	Status string
+}
+
 type CustomContextValues struct {
 	URL      string
 	Hostname string
@@ -38,6 +50,9 @@ type Application struct {
 	K8sNamespaces        []string
 	K8sSelectedNamespace string
 	K8sPods              []string
+	K8sPodDetail         PodDetail
+	K8sNodes             []K8sNode
+	K8sPodYaml           string
 }
 
 func NewApplication(application Application) Application {
@@ -53,6 +68,9 @@ func NewApplication(application Application) Application {
 		K8sNamespaces:        application.K8sNamespaces,
 		K8sSelectedNamespace: application.K8sSelectedNamespace,
 		K8sPods:              application.K8sPods,
+		K8sPodDetail:         application.K8sPodDetail,
+		K8sNodes:             application.K8sNodes,
+		K8sPodYaml:           application.K8sPodYaml,
 	}
 }
 

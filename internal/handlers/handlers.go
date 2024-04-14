@@ -80,7 +80,6 @@ func IstioMainTemplate(w http.ResponseWriter, r *http.Request) {
 func KubernetesMainTemplate(w http.ResponseWriter, r *http.Request) {
 	var fs embed.FS
 	var err error
-	var clientset *kubernetes.Clientset
 
 	// retrieve embed.FS from shared context
 	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
@@ -88,20 +87,7 @@ func KubernetesMainTemplate(w http.ResponseWriter, r *http.Request) {
 		fs = customValueFS.HttpFS
 	}
 
-	//retrieve k8s clientset from shared context
-	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
-	if ok {
-		clientset = customValues.Clientset
-
-	}
-
-	// retrieve namespaces
-	namespaces, err := k8s.GetNamespaces(clientset)
-	if err != nil {
-		log.Printf("error: %v", err)
-	}
-
-	application := types.NewApplication(types.Application{K8sNamespaces: namespaces, Error: err})
+	application := types.NewApplication(types.Application{Error: err})
 
 	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes-main.html"))
 
@@ -147,7 +133,7 @@ func ButtonSubmit(w http.ResponseWriter, r *http.Request) {
 		fs = customValues.HttpFS
 	}
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/network-main.html"))
 
 	err = tmpl.ExecuteTemplate(w, "submit", application)
 	if err != nil {
@@ -184,7 +170,7 @@ func ButtonCertificates(w http.ResponseWriter, r *http.Request) {
 		fs = customValueFS.HttpFS
 	}
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/network-main.html"))
 
 	err = tmpl.ExecuteTemplate(w, "certificates", application)
 	if err != nil {
@@ -219,7 +205,7 @@ func ButtonDNS(w http.ResponseWriter, r *http.Request) {
 		fs = customValueFS.HttpFS
 	}
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/network-main.html"))
 
 	err = tmpl.ExecuteTemplate(w, "dns-lookup", application)
 	if err != nil {
@@ -260,7 +246,7 @@ func ButtonPing(w http.ResponseWriter, r *http.Request) {
 		fs = customValueFS.HttpFS
 	}
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/network-main.html"))
 
 	err = tmpl.ExecuteTemplate(w, "ping", application)
 	if err != nil {
@@ -295,7 +281,7 @@ func ButtonTraceroute(w http.ResponseWriter, r *http.Request) {
 		fs = customValueFS.HttpFS
 	}
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/index.html"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/network-main.html"))
 
 	err = tmpl.ExecuteTemplate(w, "traceroute", application)
 	if err != nil {
@@ -334,12 +320,6 @@ func ButtonGetPods(w http.ResponseWriter, r *http.Request) {
 	var namespace string
 	var fs embed.FS
 
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, "Failed to parse form data", http.StatusInternalServerError)
-		return
-	}
-
 	//retrieve k8s clientset from shared context
 	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
 	if ok {
@@ -364,6 +344,158 @@ func ButtonGetPods(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes-main.html"))
 
 	err = tmpl.ExecuteTemplate(w, "get-pods", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func ButtonGetNodes(w http.ResponseWriter, r *http.Request) {
+	var clientset *kubernetes.Clientset
+	var fs embed.FS
+
+	//retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+	}
+
+	nodes, err := k8s.GetNodes(clientset)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+
+	application := types.NewApplication(types.Application{K8sNodes: nodes, Error: err})
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes-main.html"))
+
+	err = tmpl.ExecuteTemplate(w, "get-nodes", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func ButtonGetNamespaces(w http.ResponseWriter, r *http.Request) {
+	var fs embed.FS
+	var err error
+	var clientset *kubernetes.Clientset
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	// retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+
+	}
+
+	// retrieve namespaces
+	namespaces, err := k8s.GetNamespaces(clientset)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+
+	application := types.NewApplication(types.Application{K8sNamespaces: namespaces, Error: err})
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes-main.html"))
+
+	err = tmpl.ExecuteTemplate(w, "get-namespaces", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func ButtonPodDetail(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var namespace string
+	var podDetail types.PodDetail
+	var fs embed.FS
+	var clientset *kubernetes.Clientset
+
+	pod := r.PostFormValue("pod")
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	//retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+		namespace = customValues.Namespace
+
+	}
+
+	if pod != "" {
+		podDetail, err = k8s.GetPodDetail(clientset, namespace, pod)
+		if err != nil {
+			log.Printf("error: %v", err)
+		}
+	}
+
+	application := types.NewApplication(types.Application{K8sPodDetail: podDetail, Error: err})
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes-main.html"))
+
+	err = tmpl.ExecuteTemplate(w, "get-pod-details", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func ButtonPodYaml(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var namespace string
+	var podYaml string
+	var fs embed.FS
+	var clientset *kubernetes.Clientset
+
+	pod := r.PostFormValue("pod")
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	//retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+		namespace = customValues.Namespace
+
+	}
+
+	if pod != "" {
+		podYaml, err = k8s.GetPodYaml(clientset, namespace, pod)
+		if err != nil {
+			log.Printf("error: %v", err)
+		}
+	}
+
+	application := types.NewApplication(types.Application{K8sPodYaml: podYaml, Error: err})
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes-main.html"))
+
+	err = tmpl.ExecuteTemplate(w, "get-pod-yaml", application)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
