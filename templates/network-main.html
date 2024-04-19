@@ -1,37 +1,63 @@
 <!-- start of template -->
-{{ define "submit" }} {{ if ne .HttpRequestedUrl "" }}
-<p>{{ .HttpRequestedUrl }}</p>
-{{ end }} {{ if ne .HttpResponseStatus "" }}
-<p>{{ .HttpResponseStatus }}</p>
-{{ end }} {{ if ne .HttpServerHeader "" }}
-<p>{{ .HttpServerHeader }}</p>
-{{ end }} {{ if .Error }}
-<p>{{ .Error }}</p>
-{{ end}} {{ end }} {{ define "dns-lookup" }} {{ range $ip := .DNS }}
-<ul>
-  <li><p>{{ $ip }}</p></li>
-</ul>
-{{ end }} {{ if .Error }}
-<p>{{ .Error }}</p>
-{{ end}} {{ end}} {{ define "ping" }} {{ range $response := .PingResponses }} {{
-if ne $response "" }}
-<ul>
-  <li><p>{{ $response }}</p></li>
-</ul>
-{{ end }} {{ end }} {{ end}} {{ define "certificates" }} {{ if ne .Certificates
-"" }}
-<pre>{{.Certificates }}</pre>
-{{ end }} {{ if .Error }}
-<p>{{ .Error }}</p>
-{{ end}} {{ end }} {{ define "traceroute" }} {{ if ne .TracerouteResult "" }}
-<pre>{{.TracerouteResult }}</pre>
-{{ end }} {{ if .Error }}
-<p>{{ .Error }}</p>
-{{ end}} {{ end }} {{ define "namespaces" }} {{ range $ns := .K8sNamespaces }}
-<pre>{{ $ns }}</pre>
-{{ end }} {{ if .Error }}
-<p>{{ .Error }}</p>
-{{ end}} {{ end}}
+{{ define "submit" }}
+  {{ if ne .HttpRequestedUrl "" }}
+    <p>{{ .HttpRequestedUrl }}</p>
+  {{ end }}
+  {{ if ne .HttpResponseStatus "" }}
+    <p>{{ .HttpResponseStatus }}</p>
+  {{ end }}
+  {{ if ne .HttpServerHeader "" }}
+    <p>{{ .HttpServerHeader }}</p>
+  {{ end }}
+  {{ if .Error }}
+    <p>{{ .Error }}</p>
+  {{ end }}
+{{ end }}
+{{ define "dns-lookup" }}
+  {{ range $ip := .DNS }}
+    <ul>
+      <li><p>{{ $ip }}</p></li>
+    </ul>
+  {{ end }}
+  {{ if .Error }}
+    <p>{{ .Error }}</p>
+  {{ end }}
+{{ end }}
+{{ define "ping" }}
+  {{ range $response := .PingResponses }}
+    {{ if ne
+      $response ""
+    }}
+      <ul>
+        <li><p>{{ $response }}</p></li>
+      </ul>
+    {{ end }}
+  {{ end }}
+{{ end }}
+{{ define "certificates" }}
+  {{ if ne .Certificates "" }}
+    <pre>{{ .Certificates }}</pre>
+  {{ end }}
+  {{ if .Error }}
+    <p>{{ .Error }}</p>
+  {{ end }}
+{{ end }}
+{{ define "traceroute" }}
+  {{ if ne .TracerouteResult "" }}
+    <pre>{{ .TracerouteResult }}</pre>
+  {{ end }}
+  {{ if .Error }}
+    <p>{{ .Error }}</p>
+  {{ end }}
+{{ end }}
+{{ define "namespaces" }}
+  {{ range $ns := .K8sNamespaces }}
+    <pre>{{ $ns }}</pre>
+  {{ end }}
+  {{ if .Error }}
+    <p>{{ .Error }}</p>
+  {{ end }}
+{{ end }}
 <!-- end of template -->
 <!-- main -->
 <div class="container" id="main-container">

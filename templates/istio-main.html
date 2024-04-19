@@ -53,17 +53,17 @@
               aria-labelledby="dropdownMenuButton1"
             >
               {{ range .K8sNamespaces }}
-              <li>
-                <a
-                  class="dropdown-item"
-                  href="#"
-                  hx-post="/dropdown-namespace-selection/"
-                  hx-trigger="click"
-                  hx-target="#dropdownMenuButton1"
-                  hx-vals='{"namespace": "{{ . }}" }'
-                  >{{ . }}</a
-                >
-              </li>
+                <li>
+                  <a
+                    class="dropdown-item"
+                    href="#"
+                    hx-post="/dropdown-namespace-selection/"
+                    hx-trigger="click"
+                    hx-target="#dropdownMenuButton1"
+                    hx-vals='{"namespace": "{{ . }}" }'
+                    >{{ . }}</a
+                  >
+                </li>
               {{ end }}
             </ul>
           </div>

@@ -1,61 +1,96 @@
 <!-- start of get-pods -->
-{{ define "get-pods" }} {{ if .Error }}
-<p>{{ .Error }}</p>
-{{ else }} {{ range $pod := .K8sPods }}
-<pre>{{ $pod }}</pre>
-{{ end }} {{ end }} {{ end }}
-<!-- start of get-nodes -->
-{{ define "get-nodes" }} {{ if .Error }}
-<p>{{ .Error }}</p>
-{{ else }} {{ range $node := .K8sNodes }}
-<p>{{ $node.Name }} &#8594; {{ $node.Status }}</p>
-{{ end }} {{ end }} {{ end }}
-<!--start get-pod-details -->
-{{ define "get-pod-details" }} {{ if .Error }}
-<p>{{ .Error }}</p>
-{{ end }} {{ if ne .K8sPodDetail.PodStatus "" }}
-<ul>
-  <li><p>Status: {{ .K8sPodDetail.PodStatus }}</p></li>
-  {{ end }} {{ if ne .K8sPodDetail.PodAge "" }}
-  <li><p>Age: {{ .K8sPodDetail.PodAge }}</p></li>
-  {{ end }} {{ if ne .K8sPodDetail.PodNode "" }}
-  <li><p>Node: {{ .K8sPodDetail.PodNode }}</p></li>
-  {{ end }} {{ if gt (len .K8sPodDetail.PodContainers) 0 }}
-  <li><p>Containers:</p></li>
-  <ul>
-    {{ range $container := .K8sPodDetail.PodContainers }}
-    <li><p>{{ $container }}</p></li>
+{{ define "get-pods" }}
+  {{ if .Error }}
+    <p>{{ .Error }}</p>
+  {{ else }}
+    {{ range $pod := .K8sPods }}
+      <pre>{{ $pod }}</pre>
     {{ end }}
-  </ul>
-</ul>
-{{ end }} {{ end }} {{ define "get-namespaces" }} {{ if .Error }}
-<div
-  class="mt-5 custom-container"
-  id="main-display-box"
-  hx-swap-oob="true"
-  hx-swap="innerHTML transition:true"
->
-  <p>{{ .Error }}</p>
-</div>
-{{ else }} {{ range .K8sNamespaces }}
-<li>
-  <a
-    class="dropdown-item"
-    href="#"
-    hx-post="/dropdown-namespace-selection/"
-    hx-trigger="click"
-    hx-target="#dropdownMenuButton1"
-    hx-vals='{"namespace": "{{ . }}" }'
-    >{{ . }}</a
-  >
-</li>
-{{ end }} {{ end }} {{ end }}
+
+  {{ end }}
+
+{{ end }}
+
+
+<!-- start of get-nodes -->
+{{ define "get-nodes" }}
+  {{ if .Error }}
+    <p>{{ .Error }}</p>
+  {{ else }}
+    {{ range $node := .K8sNodes }}
+      <p>{{ $node.Name }} &#8594; {{ $node.Status }}</p>
+    {{ end }}
+  {{ end }}
+{{ end }}
+<!--start get-pod-details -->
+
+{{ define "get-pod-details" }}
+  {{ if .Error }}
+    <p>{{ .Error }}</p>
+  {{ end }}
+  {{ if ne .K8sPodDetail.PodStatus "" }}
+    <p>
+      <li>Status: {{ .K8sPodDetail.PodStatus }}</li>
+    </p>
+  {{ end }}
+
+  {{ if ne .K8sPodDetail.PodAge "" }}
+    <p><li>Age: {{ .K8sPodDetail.PodAge }}</li></p>
+  {{ end }}
+
+  {{ if ne .K8sPodDetail.PodNode "" }}
+    <p><li>Node: {{ .K8sPodDetail.PodNode }}</li></p>
+  {{ end }}
+
+  {{ if gt (len .K8sPodDetail.PodContainers) 0 }}
+    <p><li>Containers:</li></p>
+    <ul>
+      {{ range $container := .K8sPodDetail.PodContainers }}
+        <li><p>{{ $container }}</p></li>
+      {{ end }}
+    </ul>
+  {{ end }}
+{{ end }}
+
+{{ define "get-namespaces" }}
+  {{ if .Error }}
+    <div
+      class="mt-5 custom-container"
+      id="main-display-box"
+      hx-swap-oob="true"
+      hx-swap="innerHTML transition:true"
+    >
+      <p>{{ .Error }}</p>
+    </div>
+  {{ else }}
+    {{ range .K8sNamespaces }}
+      <li>
+        <a
+          class="dropdown-item"
+          href="#"
+          hx-post="/dropdown-namespace-selection/"
+          hx-trigger="click"
+          hx-target="#dropdownMenuButton1"
+          hx-vals='{"namespace": "{{ . }}" }'
+          >{{ . }}</a
+        >
+      </li>
+    {{ end }}
+
+  {{ end }}
+
+{{ end }}
+
+
 <!-- start of get-pod-yaml -->
-{{ define "get-pod-yaml" }} {{ if .Error }}
-<p>{{ .Error }}</p>
-{{ end }} {{ if ne .K8sPodYaml "" }}
-<pre>{{ .K8sPodYaml }}</pre>
-{{ end }} {{ end }}
+{{ define "get-pod-yaml" }}
+  {{ if .Error }}
+    <p>{{ .Error }}</p>
+  {{ end }}
+  {{ if ne .K8sPodYaml "" }}
+    <pre>{{ .K8sPodYaml }}</pre>
+  {{ end }}
+{{ end }}
 <!-- end of template -->
 <!-- start -->
 <!-- main -->
@@ -208,21 +243,16 @@
       </div>
       <!-- center buttons-->
       <!-- center display -->
-      {{/*
-      <span class="htmx-indicator" id="loading-indicator">
-        <img
-          src="static/icons/ripple.gif"
-          alt="Loading..."
-          class="m-auto h-10"
-        />
-      </span>
-      */}}
-      <div class="mt-5 custom-container" id="main-display-box">
+      <div class="mt-5 custom-container">
+        <div id="main-display-box">
+          {{ template "get-pods" . }}
+          {{ template "get-pod-details" . }}
+          {{ template "get-nodes" . }}
+          {{ template "get-pod-yaml" . }}
+        </div>
         <span class="htmx-indicator" id="loading-indicator">
           <img src="static/icons/loading/bars.png" alt="Loading..." />
         </span>
-        {{ template "get-pods" . }} {{ template "get-pod-details" .}} {{
-        template "get-nodes" . }} {{ template "get-pod-yaml" . }}
       </div>
     </div>
   </div>
