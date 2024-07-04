@@ -25,19 +25,24 @@ import (
 )
 
 func init() {
-	getClientSet()
+	initClientSet()
 }
 
-func getClientSet() {
+var (
+	kubeconfig *string
+)
+
+func initClientSet() {
 	// https://github.com/kubernetes/client-go/blob/master/examples/out-of-cluster-client-configuration/main.go
-	var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	} else {
 		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 	}
 	flag.Parse()
+}
 
+func GetClientSet() {
 	// use the current context in kubeconfig
 	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
@@ -53,7 +58,25 @@ func getClientSet() {
 		log.Fatal("clientset error: ", err)
 	}
 
-	types.UpdateSharedContextK8s(clientset, "")
+	var namespace string
+
+	//retrieve k8s clientset/namespace from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		namespace = customValues.Namespace
+	}
+
+	types.UpdateSharedContextK8s(clientset, namespace)
+
+}
+
+// refreshClientSet periodically refreshes the Kubernetes clientset
+func RefreshClientSet() {
+	for {
+		time.Sleep(15 * time.Second)
+		GetClientSet()
+
+	}
 
 }
 
@@ -74,30 +97,41 @@ func GetNamespaces(c *kubernetes.Clientset) (namespaces []string, err error) {
 }
 
 // get pod names with provided namespace
-func GetPodsInNamespace(c *kubernetes.Clientset, namespace string) ([]string, error) {
-	var podData []string
+func GetPodsInNamespace(c *kubernetes.Clientset, namespace string) ([]types.K8sPod, error) {
+	var K8sPods []types.K8sPod
+
+	if namespace == "all namespaces" {
+		namespace = ""
+	}
 
 	pods, err := c.CoreV1().Pods(namespace).List(context.TODO(), v1.ListOptions{})
 
 	if err != nil {
-		return []string{}, err
+		return []types.K8sPod{}, err
 	}
 	for _, pod := range pods.Items {
-		podData = append(podData, pod.Name)
+		k8sPod := types.K8sPod{
+			Name:      pod.Name,
+			Namespace: pod.Namespace,
+			Status:    string(pod.Status.Phase),
+		}
+		K8sPods = append(K8sPods, k8sPod)
 	}
 
-	return podData, nil
+	return K8sPods, nil
 
 }
 
 // get nodes
-func GetNodes(c *kubernetes.Clientset) ([]types.K8sNode, error) {
+func GetNodes(c *kubernetes.Clientset) ([]types.K8sNode, types.K8sNodesDetail, error) {
 	var K8sNodes []types.K8sNode
+	var nodesDetail types.K8sNodesDetail
 
 	nodes, err := c.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
+	nodesDetail.TotalCount = len(nodes.Items)
 
 	if err != nil {
-		return []types.K8sNode{}, err
+		return []types.K8sNode{}, types.K8sNodesDetail{}, err
 	}
 	for _, node := range nodes.Items {
 		status := "Unknown"
@@ -117,12 +151,13 @@ func GetNodes(c *kubernetes.Clientset) ([]types.K8sNode, error) {
 		K8sNodes = append(K8sNodes, k8sNode)
 	}
 
-	return K8sNodes, nil
+	return K8sNodes, nodesDetail, nil
 
 }
 
 func GetPodDetail(c *kubernetes.Clientset, podNamespace, podName string) (types.PodDetail, error) {
 	pod, err := c.CoreV1().Pods(podNamespace).Get(context.TODO(), podName, v1.GetOptions{})
+
 	if err != nil {
 		log.Printf("failed to get pod detail: %v", err)
 		return types.PodDetail{}, err

@@ -20,6 +20,16 @@ type K8sNode struct {
 	Status string
 }
 
+type K8sPod struct {
+	Name      string
+	Namespace string
+	Status    string
+}
+
+type K8sNodesDetail struct {
+	TotalCount int
+}
+
 type CustomContextValues struct {
 	URL      string
 	Hostname string
@@ -49,9 +59,10 @@ type Application struct {
 	Error                error
 	K8sNamespaces        []string
 	K8sSelectedNamespace string
-	K8sPods              []string
+	K8sPods              []K8sPod
 	K8sPodDetail         PodDetail
 	K8sNodes             []K8sNode
+	K8sNodesDetail       K8sNodesDetail
 	K8sPodYaml           string
 }
 
@@ -70,6 +81,7 @@ func NewApplication(application Application) Application {
 		K8sPods:              application.K8sPods,
 		K8sPodDetail:         application.K8sPodDetail,
 		K8sNodes:             application.K8sNodes,
+		K8sNodesDetail:       application.K8sNodesDetail,
 		K8sPodYaml:           application.K8sPodYaml,
 	}
 }
@@ -101,8 +113,8 @@ var SharedContextK8s context.Context = context.Background()
 var ContextLockK8s sync.Mutex
 
 func UpdateSharedContextK8s(clienset *kubernetes.Clientset, namespace string) {
-	ContextLockFS.Lock()
-	defer ContextLockFS.Unlock()
+	ContextLockK8s.Lock()
+	defer ContextLockK8s.Unlock()
 	SharedContextK8s = context.WithValue(SharedContextK8s, ContextKey, CustomContextValuesK8s{
 		Clientset: clienset,
 		Namespace: namespace,
