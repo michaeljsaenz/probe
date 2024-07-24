@@ -28,7 +28,7 @@
       <div class="flex-shrink-0 p-3" style="width: 280px">
         <a
           href="/"
-          class="d-flex align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom custom-link-body-emphasis"
+          class="d-flex align-items-center justify-content-center pb-3 mb-3 custom-link-body-emphasis custom-icon"
         >
           <div class="inline-container">
             <span class="specific-icon-text">pr</span>
@@ -38,9 +38,9 @@
         </a>
         <a
           href="/"
-          class="d-flex flex-column align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom"
+          class="d-flex flex-column align-items-center justify-content-center pb-3 mb-3 custom-icon"
           hx-trigger="click"
-          hx-post="/network-main/"
+          hx-post="/network/"
           hx-target="#main-container"
           hx-swap="outterHTML transition:true"
         >
@@ -56,10 +56,10 @@
         </a>
         <a
           href="#"
-          class="d-flex flex-column align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom"
+          class="d-flex flex-column align-items-center justify-content-center pb-3 mb-3 custom-icon"
           class=""
           hx-trigger="click"
-          hx-post="/istio-main/"
+          hx-post="/istio/"
           hx-target="#main-container"
           hx-swap="outterHTML transition:true"
         >
@@ -75,9 +75,9 @@
         </a>
         <a
           href="#"
-          class="d-flex flex-column align-items-center justify-content-center pb-3 mb-3 text-decoration-none border-bottom"
+          class="d-flex flex-column align-items-center justify-content-center pb-3 mb-3 custom-icon"
           hx-trigger="click"
-          hx-post="/kubernetes-main/"
+          hx-post="/kubernetes/"
           hx-target="#main-container"
           hx-swap="outterHTML transition:true"
         >
@@ -110,7 +110,7 @@
       <div
         class="container"
         id="main-container"
-        hx-post="/kubernetes-main/"
+        hx-post="/kubernetes/"
         hx-target="#main-container"
         hx-trigger="load"
         hx-swap="innerHTML"

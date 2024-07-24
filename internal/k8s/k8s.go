@@ -1,16 +1,21 @@
 package k8s
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"math"
+	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/michaeljsaenz/probe/internal/types"
+	"github.com/michaeljsaenz/probe/internal/utils"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -20,6 +25,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport/spdy"
 	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/yaml"
 )
@@ -66,7 +73,7 @@ func GetClientSet() {
 		namespace = customValues.Namespace
 	}
 
-	types.UpdateSharedContextK8s(clientset, namespace)
+	types.UpdateSharedContextK8s(clientset, config, namespace)
 
 }
 
@@ -172,16 +179,24 @@ func GetPodDetail(c *kubernetes.Clientset, podNamespace, podName string) (types.
 		podAge = strconv.Itoa(ageInDays) + "d"
 	}
 
-	var containers []string
+	podContainers := make(map[string][]int32)
+
 	for _, container := range pod.Spec.Containers {
-		containers = append(containers, container.Name)
+		podContainers[container.Name] = []int32{}
+		for _, port := range container.Ports {
+
+			podContainers[container.Name] = append(podContainers[container.Name], port.ContainerPort)
+		}
+
 	}
 
 	return types.PodDetail{
+		PodName:       podName,
+		PodNamespace:  podNamespace,
 		PodStatus:     string(pod.Status.Phase),
 		PodAge:        podAge,
 		PodNode:       pod.Spec.NodeName,
-		PodContainers: containers,
+		PodContainers: podContainers,
 	}, nil
 }
 
@@ -213,4 +228,89 @@ func GetPodYaml(c *kubernetes.Clientset, podNamespace string, podName string) (s
 
 	return string(yamlString), nil
 
+}
+
+func PortForward(clientset *kubernetes.Clientset, config *rest.Config,
+	namespace string, podName string, containerPort string) (URL, podPort string, err error) {
+
+	var startinglocalPort int = 9000
+	localPort, err := utils.FindLocalPort(startinglocalPort)
+	if err != nil {
+		log.Printf("error:%v", err)
+		return "", "", err
+	}
+
+	req := clientset.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Namespace(namespace).
+		Name(podName).
+		SubResource("portforward")
+
+	// create roundtripper/upgrader for spdy
+	roundTripper, upgrader, err := spdy.RoundTripperFor(config)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create round tripper: %v", err)
+	}
+
+	// channel for status and outputs
+	stopChan := make(chan struct{}, 1)
+	readyChan := make(chan struct{})
+	out := new(strings.Builder)
+	errOut := new(strings.Builder)
+
+	// create the port forwarder
+	pf, err := portforward.New(
+		spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, req.URL()),
+		[]string{fmt.Sprintf("%s:%s", localPort, containerPort)},
+		stopChan,
+		readyChan,
+		out,
+		errOut,
+	)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create port forwarder: %v", err)
+	}
+
+	// start port forward
+	go func() {
+		if err := pf.ForwardPorts(); err != nil {
+			log.Printf("port forward failed: %v", err)
+		}
+	}()
+
+	// close port forward
+	go func() {
+		time.Sleep(300 * time.Second)
+		close(stopChan)
+		log.Printf("Forwarding from http://127.0.0.1:%s -> %s (closed)", localPort, containerPort)
+	}()
+
+	// wait until port forward is ready
+	select {
+	case <-readyChan:
+		log.Printf("Forwarding from http://127.0.0.1:%s -> %s", localPort, containerPort)
+		URL := fmt.Sprintf("http://127.0.0.1:%s", localPort)
+		return URL, containerPort, nil
+	case <-time.After(10 * time.Second):
+		return "", "", fmt.Errorf("timeout waiting for port forward to be ready")
+	}
+}
+
+func GetContainerLog(clientset *kubernetes.Clientset, podName, containerName, namespace string) (string, error) {
+	logOptions := &corev1.PodLogOptions{Container: containerName}
+	req := clientset.CoreV1().Pods(namespace).GetLogs(podName, logOptions)
+	podLogs, err := req.Stream(context.TODO())
+	if err != nil {
+		log.Printf("error:%v", err)
+		return "", err
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		log.Printf("error:%v", err)
+		return "", err
+	}
+	return buf.String(), nil
 }

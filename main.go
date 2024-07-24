@@ -3,8 +3,6 @@ package main
 import (
 	"embed"
 	"log"
-	"net/http"
-	"os"
 
 	"github.com/michaeljsaenz/probe/internal/k8s"
 	"github.com/michaeljsaenz/probe/internal/routes"
@@ -22,18 +20,15 @@ func main() {
 
 	routes.RegisterRoutes(fs)
 
-	serverPort := "8099"
-	if port, exists := os.LookupEnv("PROBE_SERVER_PORT"); exists {
-		serverPort = port
-	}
-	server := http.Server{Addr: ":" + serverPort}
+	server, listener := utils.ServerPortAndListener()
 
 	go func() {
-		log.Fatal(server.ListenAndServe())
+		log.Fatal(server.Serve(listener))
 	}()
-	log.Print("server is up.")
+	log.Print("Server is up.")
 	defer server.Close()
 
-	utils.OpenBrowser(serverPort)
+	utils.OpenBrowser(server.Addr)
+
 	utils.Shutdown(&server)
 }

@@ -6,18 +6,26 @@ import (
 	"sync"
 
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 type PodDetail struct {
+	PodName       string
+	PodNamespace  string
 	PodStatus     string
 	PodAge        string
 	PodNode       string
-	PodContainers []string
+	PodContainers map[string][]int32
 }
 
 type K8sNode struct {
 	Name   string
 	Status string
+}
+
+type K8sPodPortForward struct {
+	PodPort string
+	URL     string
 }
 
 type K8sPod struct {
@@ -41,6 +49,7 @@ type CustomContextValuesFS struct {
 
 type CustomContextValuesK8s struct {
 	Clientset *kubernetes.Clientset
+	Config    *rest.Config
 	Namespace string
 }
 
@@ -64,6 +73,8 @@ type Application struct {
 	K8sNodes             []K8sNode
 	K8sNodesDetail       K8sNodesDetail
 	K8sPodYaml           string
+	K8sPodPortForward    K8sPodPortForward
+	K8sPodLog            string
 }
 
 func NewApplication(application Application) Application {
@@ -83,6 +94,8 @@ func NewApplication(application Application) Application {
 		K8sNodes:             application.K8sNodes,
 		K8sNodesDetail:       application.K8sNodesDetail,
 		K8sPodYaml:           application.K8sPodYaml,
+		K8sPodPortForward:    application.K8sPodPortForward,
+		K8sPodLog:            application.K8sPodLog,
 	}
 }
 
@@ -112,11 +125,12 @@ func UpdateSharedContextFS(httpFS embed.FS) {
 var SharedContextK8s context.Context = context.Background()
 var ContextLockK8s sync.Mutex
 
-func UpdateSharedContextK8s(clienset *kubernetes.Clientset, namespace string) {
+func UpdateSharedContextK8s(clienset *kubernetes.Clientset, config *rest.Config, namespace string) {
 	ContextLockK8s.Lock()
 	defer ContextLockK8s.Unlock()
 	SharedContextK8s = context.WithValue(SharedContextK8s, ContextKey, CustomContextValuesK8s{
 		Clientset: clienset,
+		Config:    config,
 		Namespace: namespace,
 	})
 }

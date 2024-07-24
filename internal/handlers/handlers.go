@@ -12,6 +12,7 @@ import (
 	"github.com/michaeljsaenz/probe/internal/network"
 	"github.com/michaeljsaenz/probe/internal/types"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 func StaticFiles(httpFS embed.FS) {
@@ -39,7 +40,11 @@ func RootTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NetworkMainTemplate(w http.ResponseWriter, r *http.Request) {
+func NetworkTemplate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	var fs embed.FS
 
 	// retrieve embed.FS from shared context
@@ -58,7 +63,11 @@ func NetworkMainTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func IstioMainTemplate(w http.ResponseWriter, r *http.Request) {
+func IstioTemplate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	var fs embed.FS
 	var err error
 
@@ -77,7 +86,11 @@ func IstioMainTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func KubernetesMainTemplate(w http.ResponseWriter, r *http.Request) {
+func KubernetesTemplate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	var fs embed.FS
 	var err error
 
@@ -99,6 +112,10 @@ func KubernetesMainTemplate(w http.ResponseWriter, r *http.Request) {
 }
 
 func ButtonSubmit(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	var err error
 	var fs embed.FS
 	var serverHeader, requestedUrlHeader, requestHostnameHeader, requestResponseStatus string
@@ -144,6 +161,10 @@ func ButtonSubmit(w http.ResponseWriter, r *http.Request) {
 }
 
 func ButtonCertificates(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	types.ContextLock.Lock()
 	defer types.ContextLock.Unlock()
 
@@ -180,6 +201,10 @@ func ButtonCertificates(w http.ResponseWriter, r *http.Request) {
 }
 
 func ButtonDNS(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	types.ContextLock.Lock()
 	defer types.ContextLock.Unlock()
 
@@ -216,6 +241,10 @@ func ButtonDNS(w http.ResponseWriter, r *http.Request) {
 }
 
 func ButtonPing(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	types.ContextLock.Lock()
 	defer types.ContextLock.Unlock()
 
@@ -256,6 +285,10 @@ func ButtonPing(w http.ResponseWriter, r *http.Request) {
 }
 
 func ButtonTraceroute(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	types.ContextLock.Lock()
 	defer types.ContextLock.Unlock()
 
@@ -291,7 +324,12 @@ func ButtonTraceroute(w http.ResponseWriter, r *http.Request) {
 }
 
 func DropdownNamespaceSelection(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	var clientset *kubernetes.Clientset
+	var config *rest.Config
 
 	err := r.ParseForm()
 	if err != nil {
@@ -305,9 +343,10 @@ func DropdownNamespaceSelection(w http.ResponseWriter, r *http.Request) {
 	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
 	if ok {
 		clientset = customValues.Clientset
+		config = customValues.Config
 	}
 
-	types.UpdateSharedContextK8s(clientset, namespace)
+	types.UpdateSharedContextK8s(clientset, config, namespace)
 
 	application := types.NewApplication(types.Application{K8sSelectedNamespace: namespace, Error: err})
 
@@ -316,6 +355,10 @@ func DropdownNamespaceSelection(w http.ResponseWriter, r *http.Request) {
 }
 
 func ButtonGetPods(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	var clientset *kubernetes.Clientset
 	var namespace string
 	var fs embed.FS
@@ -351,6 +394,10 @@ func ButtonGetPods(w http.ResponseWriter, r *http.Request) {
 }
 
 func ButtonGetNodes(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	var clientset *kubernetes.Clientset
 	var fs embed.FS
 
@@ -384,6 +431,10 @@ func ButtonGetNodes(w http.ResponseWriter, r *http.Request) {
 }
 
 func ButtonGetNamespaces(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	var fs embed.FS
 	var err error
 	var clientset *kubernetes.Clientset
@@ -421,6 +472,10 @@ func ButtonGetNamespaces(w http.ResponseWriter, r *http.Request) {
 }
 
 func ButtonPodDetail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	var err error
 	var podDetail types.PodDetail
 	var fs embed.FS
@@ -463,7 +518,11 @@ func ButtonPodDetail(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func ButtonPodYaml(w http.ResponseWriter, r *http.Request) {
+func ClickPodYaml(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
 	var err error
 	var namespace string
 	var podYaml string
@@ -498,6 +557,118 @@ func ButtonPodYaml(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "get-pod-yaml", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func ClearContextK8sNamespace(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	var clientset *kubernetes.Clientset
+	var config *rest.Config
+
+	// retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+		config = customValues.Config
+	}
+
+	types.UpdateSharedContextK8s(clientset, config, "")
+
+}
+
+func ClickContainerLog(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	var fs embed.FS
+	var clientset *kubernetes.Clientset
+
+	pod := strings.TrimSpace(r.PostFormValue("pod"))
+	container := strings.TrimSpace(r.PostFormValue("container"))
+	namespace := strings.TrimSpace(r.PostFormValue("namespace"))
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	//retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+		if namespace == "" {
+			namespace = customValues.Namespace
+		}
+	}
+
+	podLog, err := k8s.GetContainerLog(clientset, pod, container, namespace)
+
+	application := types.NewApplication(types.Application{K8sPodLog: podLog, Error: err})
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
+
+	err = tmpl.ExecuteTemplate(w, "get-container-log", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
+func ClickContainerPort(w http.ResponseWriter, r *http.Request) {
+	var clientset *kubernetes.Clientset
+	var config *rest.Config
+	var fs embed.FS
+
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	pod := strings.TrimSpace(r.PostFormValue("pod"))
+	// container := strings.TrimSpace(r.PostFormValue("container"))
+	containerPort := strings.TrimSpace(r.PostFormValue("port"))
+	namespace := strings.TrimSpace(r.PostFormValue("namespace"))
+
+	//retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+		config = customValues.Config
+		// namespace from sharedContext empty if not selected from dropdown
+	}
+
+	url, podPort, err := k8s.PortForward(clientset, config, namespace, pod, containerPort)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+
+	pf := types.K8sPodPortForward{
+		URL:     url,
+		PodPort: podPort,
+	}
+
+	application := types.NewApplication(types.Application{K8sPodPortForward: pf, Error: err})
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
+
+	err = tmpl.ExecuteTemplate(w, "get-pod-port-forward", application)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -86,7 +86,11 @@
   border-radius: 15px;
   border-color: #2aaa8a;
   word-wrap: break-word;
-  overflow: auto;
+  overflow-wrap: break-word;
+  white-space: normal;
+  overflow-y: auto;
+  display: block;
+  box-sizing: border-box;
 }
 
 .custom-container img {
@@ -101,6 +105,7 @@
 }
 .custom-container pre {
   margin: 20px;
+  white-space: pre-wrap;
 }
 .custom-container thead th {
   position: sticky;
@@ -118,11 +123,13 @@
 }
 
 .table tbody tr:hover td {
-  background-color: #2aaa8a;
+}
+
+.no-table-margin-bottom {
+  margin-bottom: 0;
 }
 
 .custom-hover-color-change:hover {
-  background-color: #2aaa8a;
   color: #fff;
 }
 
@@ -191,8 +198,14 @@
   border-color: #2aaa8a;
 }
 
+.custom-hover-color-change:hover,
+.custom-hover-color-change:focus {
+  background-color: #2aaa8a;
+  border-color: #2aaa8a;
+}
+
 .dropdown-menu-scroll {
-  max-height: 250px;
+  max-height: 500px;
   overflow-y: auto;
 }
 
@@ -210,3 +223,15 @@
 .btn-equal-width {
   min-width: 120px;
 }
+
+.custom-icon {
+  border: 2px solid transparent;
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 8px;
+}
+
+.custom-icon:focus {
+  border-color: #2aaa8a;
+  outline: none;
+  border-radius: 8px;
