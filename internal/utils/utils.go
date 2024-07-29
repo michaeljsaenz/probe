@@ -89,7 +89,7 @@ func FindLocalPort(startingLocalPort int) (localPort string, err error) {
 			continue
 		}
 		_ = listener.Close()
-		log.Printf("Port avaialble on %s\n", localPort)
+		log.Printf("Port available on %s\n", localPort)
 		return
 	}
 
