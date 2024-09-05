@@ -7,7 +7,7 @@
       <div class="row">
         <div class="col-md-8 mb-2">
           <form
-            hx-post="/button-submit/"
+            hx-get="/button-submit/"
             hx-target="#main-display-box"
             hx-swap="innerHTML transition:true"
             hx-indicator="#spinner"
@@ -75,7 +75,7 @@
           <button
             type="button"
             class="btn btn-secondary btn-md custom-hover-color-change w-100"
-            hx-post="/button-ping/"
+            hx-get="/button-ping/"
             hx-target="#main-display-box"
             hx-swap="outterHTML transition:true"
             hx-indicator="#btnspinner-ping"

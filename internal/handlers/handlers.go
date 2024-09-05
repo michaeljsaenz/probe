@@ -102,7 +102,7 @@ func KubernetesTemplate(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{Error: err})
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-*.gohtml"))
 
 	err = tmpl.Execute(w, application)
 	if err != nil {
@@ -674,4 +674,92 @@ func ClickContainerPort(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+func SubmitContainerExec(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	var fs embed.FS
+	var clientset *kubernetes.Clientset
+	var config *rest.Config
+	var containerExecResponse string
+
+	pod := strings.TrimSpace(r.PostFormValue("pod"))
+	container := strings.TrimSpace(r.PostFormValue("container"))
+	namespace := strings.TrimSpace(r.PostFormValue("namespace"))
+	command := r.PostFormValue("command")
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	//retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+		config = customValues.Config
+	}
+
+	containerDetail := types.K8sContainerDetail{
+		PodName:               pod,
+		PodNamespace:          namespace,
+		ContainerName:         container,
+		ContainerExecResponse: containerExecResponse,
+	}
+
+	containerExecResponse, err := k8s.ContainerExec(clientset, config, pod, container, namespace, command)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+	containerDetail.ContainerExecResponse = containerExecResponse
+
+	application := types.NewApplication(types.Application{K8sContainerDetail: containerDetail, Error: err})
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-display.gohtml"))
+
+	err = tmpl.ExecuteTemplate(w, "submit-container-exec", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func ClickContainerExec(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	var err error
+	var fs embed.FS
+
+	pod := strings.TrimSpace(r.PostFormValue("pod"))
+	container := strings.TrimSpace(r.PostFormValue("container"))
+	namespace := strings.TrimSpace(r.PostFormValue("namespace"))
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	containerDetail := types.K8sContainerDetail{
+		PodName:       pod,
+		PodNamespace:  namespace,
+		ContainerName: container,
+	}
+
+	application := types.NewApplication(types.Application{K8sContainerDetail: containerDetail, Error: err})
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-display.gohtml"))
+
+	err = tmpl.ExecuteTemplate(w, "click-container-exec", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

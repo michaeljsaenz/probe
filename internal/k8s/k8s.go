@@ -9,6 +9,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -26,6 +27,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/transport/spdy"
 	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/yaml"
@@ -313,4 +315,51 @@ func GetContainerLog(clientset *kubernetes.Clientset, podName, containerName, na
 		return "", err
 	}
 	return buf.String(), nil
+}
+
+func ContainerExec(clientset *kubernetes.Clientset, config *rest.Config,
+	podName, containerName, namespace string, command string) (string, error) {
+	exeCommand := []string{"sh", "-c", command}
+	req := clientset.CoreV1().RESTClient().
+		Post().
+		Resource("pods").
+		Name(podName).
+		Namespace(namespace).
+		SubResource("exec").
+		Param("container", containerName).
+		Param("stdout", "true").
+		Param("stderr", "true").
+		Param("stdin", "true").
+		Param("tty", "false")
+
+	for _, cmd := range exeCommand {
+		req.Param("command", cmd)
+	}
+
+	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	if err != nil {
+		return "", fmt.Errorf("error creating SPDY executor: %v", err)
+	}
+
+	var stdoutBuf, stderrBuf bytes.Buffer
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
+		Stdin:  os.Stdin,
+		Stdout: &stdoutBuf,
+		Stderr: &stderrBuf,
+		Tty:    false,
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("error executing command in container: %v", err)
+	}
+
+	var combinedOutput bytes.Buffer
+	combinedOutput.Write(stdoutBuf.Bytes())
+	combinedOutput.Write(stderrBuf.Bytes())
+
+	return combinedOutput.String(), nil
 }

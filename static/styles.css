@@ -235,3 +235,12 @@
   border-color: #2aaa8a;
   outline: none;
   border-radius: 8px;
+}
+
+.fade-me-in.htmx-added {
+  opacity: 0;
+}
+.fade-me-in {
+  opacity: 1;
+  transition: opacity 1s ease-out;
+}

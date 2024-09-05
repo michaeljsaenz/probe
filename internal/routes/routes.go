@@ -30,4 +30,6 @@ func RegisterRoutes(fs embed.FS) {
 	http.HandleFunc("/clear-context-k8s-ns/", handlers.ClearContextK8sNamespace)
 	http.HandleFunc("/click-container-log/", handlers.ClickContainerLog)
 	http.HandleFunc("/click-container-port/", handlers.ClickContainerPort)
+	http.HandleFunc("/click-container-exec/", handlers.ClickContainerExec)
+	http.HandleFunc("/submit-container-exec/", handlers.SubmitContainerExec)
 }
