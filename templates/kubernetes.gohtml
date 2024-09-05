@@ -3,8 +3,14 @@
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
-
   {{ if ne ( len .K8sPods) 0 }}
+    <!-- delete on load container-input -->
+    <div
+      hx-trigger="load" 
+      hx-post="#" 
+      hx-target="#container-input" 
+      hx-swap="delete"
+    ></div>
     <table class="table table-hover no-table-margin-bottom">
       <thead>
         <tr>
@@ -77,14 +83,15 @@
       <table class="table table-hover no-table-margin-bottom">
       <thead>
         <tr>
-          <th scope="col"></th>
+          <th scope="col"><i class="fa-solid fa-file-code" title="YAML"></i></th>
           <th scope="col">Pod Name</th>
           <th scope="col">Namespace</th>
           <th scope="col">Status</th>
           <th scope="col">Age</th>
           <th scope="col">Node</th>
-          <th scope="col">Container Log</th>
-          <th scope="col">Port Forward</th>
+          <th scope="col"><i class="fas fa-file-lines" title="Container Log"></i></th>
+          <th scope="col"><i class="fas fa-terminal" title="Exec"></i></th>
+          <th scope="col"><i class="fa-solid fa-square-arrow-up-right" title="Port Forward"></i></th>
         </tr>
       </thead>
       <tbody>
@@ -99,7 +106,7 @@
               hx-vals='{"pod": "{{ $.K8sPodDetail.PodName }}",
                         "namespace": "{{ $.K8sPodDetail.PodNamespace }}" }'
               >
-                <i class="fas fa-file-alt"></i> 
+                <i class="fa-solid fa-file-code"></i>
               </a>
           </td>
           <td> {{ .K8sPodDetail.PodName }} </td>
@@ -131,6 +138,29 @@
               {{ end }}
           </td>
           <td> {{ range $container, $ports := .K8sPodDetail.PodContainers }}
+                <a
+                  hx-post="/click-container-exec/"
+                  hx-target="#main-display-box"
+                  hx-swap="outerHTML transition:true"
+                  href="#"
+                  hx-trigger="click"
+                  hx-vals='{"pod": "{{ $.K8sPodDetail.PodName }}",
+                            "container": "{{ $container }}",
+                            "namespace": "{{ $.K8sPodDetail.PodNamespace }}" }'
+                  hx-indicator="#spinner-{{ $container }}-exec"
+                >
+                  {{ $container }}
+                  <span
+                    class="spinner-border spinner-border-sm htmx-indicator"
+                    id="spinner-{{ $container }}-exec"
+                    role="status"
+                    aria-hidden="true"
+                  ></span>
+                </a><br>
+              {{ end }}
+          </td>
+
+          <td> {{ range $container, $ports := .K8sPodDetail.PodContainers }}
                 {{ range $port := $ports }}
                   <a
                     hx-post="/click-container-port/"
@@ -153,6 +183,55 @@
     </tbody>
   </table>
 {{ end }}
+<!--start click-container-exec -->
+{{ define "click-container-exec" }}
+  {{ if .Error }}
+    <p>{{ .Error }}</p>
+  {{ end }}
+    <!-- start container input-->
+      <div class="row fade-me-in" id="container-input">
+        <div class="col-md-12">
+          <form
+            hx-post="/submit-container-exec/"
+            hx-target="#main-display-box"
+            hx-swap="innerHTML transition:true"
+            hx-indicator="#spinner"
+            class="d-flex"
+            hx-vals='{"pod": "{{ $.K8sContainerDetail.PodName }}",
+                    "container": "{{ $.K8sContainerDetail.ContainerName }}",
+                    "namespace": "{{ $.K8sContainerDetail.PodNamespace }}" }'
+          >
+          <div class="input-group mb-0">
+            <span class="input-group-text" id="basic-addon3">{{ $.K8sContainerDetail.ContainerName }}</span>
+            <input 
+              type="text"
+              name="command"
+              class="form-control"
+              id="basic-submit" 
+              aria-describedby="basic-addon3"
+              placeholder="Enter Command..."
+            >
+          </div>
+            <div class="col-md-2 ms-2">
+              <button
+                type="submit"
+                class="btn btn-secondary custom-hover-color-change w-100"
+              >
+                Submit
+                <span
+                  class="spinner-border spinner-border-sm htmx-indicator"
+                  id="spinner"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {{ template "main-display" . }}
+{{ end }}
+<!-- end container input-->
 <!--start get-pod-port-forward -->
 {{ define "get-pod-port-forward" }}
   {{ if .Error }}
@@ -161,6 +240,14 @@
     {{ if ne .K8sPodPortForward.URL "" }}
       <p>Forwarding from <a href="{{ .K8sPodPortForward.URL }}" target="_blank">{{ .K8sPodPortForward.URL }}</a> -> {{ .K8sPodPortForward.PodPort }}</p>
     {{ end }}
+  {{ end }}
+{{ end }}
+<!--start submit-container-exec -->
+{{ define "submit-container-exec" }}
+  {{ if .Error }}
+    <pre>{{ .Error }}</pre>
+  {{ else }}
+    <pre>{{ .K8sContainerDetail.ContainerExecResponse }}</pre>
   {{ end }}
 {{ end }}
 <!--start get-namespaces -->
@@ -211,89 +298,4 @@
 <!-- end of template -->
 <!-- start -->
 <!-- main -->
-<div class="container" id="main-container">
-  <div class="col-12">
-    <div class="mt-4">
-      <div class="row">
-        <div class="col-md-8 mb-2">
-          <div class="d-flex">
-            <div class="ms-2">
-              <!-- pod button-->
-                <button
-                  class="btn btn-secondary btn-md custom-hover-color-change btn-equal-width"
-                  hx-post="/button-get-pods/"
-                  hx-target="#main-display-box"
-                  hx-swap="innerHTML transition:true scroll:top"
-                  hx-indicator="#pod-spinner"
-                  href="#"
-                >
-                  Pods
-                  <span
-                    class="spinner-border spinner-border-sm htmx-indicator"
-                    id="pod-spinner"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
-                </button>
-              <!-- node button-->
-                <button
-                  class="btn btn-secondary btn-md custom-hover-color-change btn-equal-width"
-                  hx-post="/button-get-nodes/"
-                  hx-target="#main-display-box"
-                  hx-swap="innerHTML transition:true scroll:top"
-                  hx-indicator="#node-spinner"
-                  href="#"
-                >
-                  Nodes
-                  <span
-                    class="spinner-border spinner-border-sm htmx-indicator"
-                    id="node-spinner"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
-                </button>
-            </div>
-          </div> 
-        </div>
-        <!-- namespace button -->
-        <div class="col-md-4 mb-2 d-flex justify-content-end">
-          <div class="dropdown">
-            <button
-              class="btn btn-secondary btn-md dropdown-toggle btn-equal-width"
-              type="button"
-              id="dropdownMenuNamespaceButton"
-              data-bs-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-              hx-post="/button-get-namespaces/"
-              hx-indicator="#btnspinner-ns"
-              hx-swap="innerHTML transition:true"
-              hx-target="#dropdown-menu"
-            >
-              Namespace
-              <span
-                class="spinner-border spinner-border-sm htmx-indicator"
-                id="btnspinner-ns"
-                role="status"
-                aria-hidden="true"
-              ></span>
-            </button>
-            <ul
-              class="dropdown-menu dropdown-menu-end dropdown-menu-scroll"
-              id="dropdown-menu"
-              aria-labelledby="dropdownMenuNamespaceButton"
-            >
-              {{ template "get-namespaces" . }}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div hx-post="/clear-context-k8s-ns/" hx-trigger="load" hx-swap="none"></div>
-    <!-- center display -->
-    <a id="scroll-target"></a>
-    <div class="mt-5 custom-container" id="main-display-box">
-    </div>
-  </div>
-</div>
+{{ template "main-container" . }}

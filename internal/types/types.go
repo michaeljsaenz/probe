@@ -18,6 +18,13 @@ type PodDetail struct {
 	PodContainers map[string][]int32
 }
 
+type K8sContainerDetail struct {
+	ContainerName         string
+	PodName               string
+	PodNamespace          string
+	ContainerExecResponse string
+}
+
 type K8sNode struct {
 	Name   string
 	Status string
@@ -75,6 +82,7 @@ type Application struct {
 	K8sPodYaml           string
 	K8sPodPortForward    K8sPodPortForward
 	K8sPodLog            string
+	K8sContainerDetail   K8sContainerDetail
 }
 
 func NewApplication(application Application) Application {
@@ -96,6 +104,7 @@ func NewApplication(application Application) Application {
 		K8sPodYaml:           application.K8sPodYaml,
 		K8sPodPortForward:    application.K8sPodPortForward,
 		K8sPodLog:            application.K8sPodLog,
+		K8sContainerDetail:   application.K8sContainerDetail,
 	}
 }
 
