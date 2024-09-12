@@ -67,15 +67,16 @@ func GetClientSet() {
 		log.Fatal("clientset error: ", err)
 	}
 
-	var namespace string
+	var namespace, pod string
 
 	//retrieve k8s clientset/namespace from shared context
 	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
 	if ok {
 		namespace = customValues.Namespace
+		pod = customValues.Pod
 	}
 
-	types.UpdateSharedContextK8s(clientset, config, namespace)
+	types.UpdateSharedContextK8s(clientset, config, namespace, pod)
 
 }
 

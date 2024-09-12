@@ -3,14 +3,14 @@
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
-  {{ if ne ( len .K8sPods) 0 }}
-    <!-- delete on load container-input -->
+  <!-- delete on load container-input -->
     <div
       hx-trigger="load" 
       hx-post="#" 
       hx-target="#container-input" 
       hx-swap="delete"
     ></div>
+  {{ if ne ( len .K8sPods) 0 }}
     <table class="table table-hover no-table-margin-bottom">
       <thead>
         <tr>
@@ -79,19 +79,26 @@
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
-      {{ if ne .K8sPodDetail.PodStatus "" }}
-      <table class="table table-hover no-table-margin-bottom">
+  <!-- delete on load container-input -->
+    <div
+      hx-trigger="load" 
+      hx-post="#" 
+      hx-target="#container-input" 
+      hx-swap="delete"
+    ></div>
+  {{ if ne .K8sPodDetail.PodName "" }}
+    <table class="table table-hover no-table-margin-bottom">
       <thead>
         <tr>
-          <th scope="col"><i class="fa-solid fa-file-code" title="YAML"></i></th>
+          <th scope="col"><i class="fa-solid fa-file-code fs-5" title="YAML"></i></th>
           <th scope="col">Pod Name</th>
           <th scope="col">Namespace</th>
           <th scope="col">Status</th>
           <th scope="col">Age</th>
           <th scope="col">Node</th>
-          <th scope="col"><i class="fas fa-file-lines" title="Container Log"></i></th>
-          <th scope="col"><i class="fas fa-terminal" title="Exec"></i></th>
-          <th scope="col"><i class="fa-solid fa-square-arrow-up-right" title="Port Forward"></i></th>
+          <th scope="col"><i class="fa-solid fa-file-lines fs-5" title="Container Log"></i></th>
+          <th scope="col"><i class="fas fa-terminal fs-5" title="Exec"></i></th>
+          <th scope="col"><i class="fa-solid fa-square-arrow-up-right fs-5" title="Port Forward"></i></th>
         </tr>
       </thead>
       <tbody>
@@ -106,7 +113,7 @@
               hx-vals='{"pod": "{{ $.K8sPodDetail.PodName }}",
                         "namespace": "{{ $.K8sPodDetail.PodNamespace }}" }'
               >
-                <i class="fa-solid fa-file-code"></i>
+                <i class="fa-solid fa-file-code fs-5"></i>
               </a>
           </td>
           <td> {{ .K8sPodDetail.PodName }} </td>
@@ -118,7 +125,7 @@
                 <a
                   hx-post="/click-container-log/"
                   hx-target="#main-display-box"
-                  hx-swap="innerHTML transition:true"
+                  hx-swap="outterHTML transition:true"
                   href="#"
                   hx-trigger="click"
                   hx-vals='{"pod": "{{ $.K8sPodDetail.PodName }}",
@@ -179,9 +186,9 @@
               {{ end }}
           </td>
         </tr>
-      {{ end }}
-    </tbody>
-  </table>
+      </tbody>
+    </table>
+  {{ end }}
 {{ end }}
 <!--start click-container-exec -->
 {{ define "click-container-exec" }}
@@ -190,7 +197,6 @@
   {{ end }}
     <!-- start container input-->
       <div class="row fade-me-in" id="container-input">
-        <div class="col-md-12">
           <form
             hx-post="/submit-container-exec/"
             hx-target="#main-display-box"
@@ -202,14 +208,20 @@
                     "namespace": "{{ $.K8sContainerDetail.PodNamespace }}" }'
           >
           <div class="input-group mb-0">
-            <span class="input-group-text" id="basic-addon3">{{ $.K8sContainerDetail.ContainerName }}</span>
+            <button class="btn btn-secondary btn-md custom-hover-color-change" type="button" id="pod-button-addon1"
+              hx-post="/button-get-pod-detail/"
+              hx-target="#main-display-box"
+              hx-swap="innerHTML transition:true"
+              href="#"
+              hx-trigger="click"
+            >
+              <i class="fa-solid fa-circle-arrow-left fa-lg"></i> Pod</button>
             <input 
               type="text"
-              name="command"
+              id="container-command-input"
               class="form-control"
-              id="basic-submit" 
-              aria-describedby="basic-addon3"
-              placeholder="Enter Command..."
+              placeholder="Enter command..."
+              aria-describedby="pod-button-addon1"
             >
           </div>
             <div class="col-md-2 ms-2">
@@ -234,6 +246,17 @@
 <!-- end container input-->
 <!--start get-pod-port-forward -->
 {{ define "get-pod-port-forward" }}
+  <div class="icon-wrapper-back-to-pod">
+      <a class="clickable-icon-back-to-pod"
+        hx-post="/button-get-pod-detail/"
+        hx-target="#main-display-box"
+        hx-swap="innerHTML transition:true"
+        href="#"
+        hx-trigger="click"
+      >
+      <i class="fa-solid fa-circle-arrow-left"></i><span> Pod</span>
+      </a>
+  </div>
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ else }}
@@ -279,6 +302,17 @@
 {{ end }}
 <!-- start of get-pod-yaml -->
 {{ define "get-pod-yaml" }}
+  <div class="icon-wrapper-back-to-pod">
+      <a class="clickable-icon-back-to-pod"
+        hx-post="/button-get-pod-detail/"
+        hx-target="#main-display-box"
+        hx-swap="innerHTML transition:true"
+        href="#"
+        hx-trigger="click"
+      >
+      <i class="fa-solid fa-circle-arrow-left"></i><span> Pod</span>
+      </a>
+  </div>
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
@@ -288,6 +322,17 @@
 {{ end }}
 <!-- start of get-pod-log -->
 {{ define "get-container-log" }}
+  <div class="icon-wrapper-back-to-pod">
+      <a class="clickable-icon-back-to-pod"
+        hx-post="/button-get-pod-detail/"
+        hx-target="#main-display-box"
+        hx-swap="innerHTML transition:true"
+        href="#"
+        hx-trigger="click"
+      >
+      <i class="fa-solid fa-circle-arrow-left"></i><span> Pod</span>
+      </a>
+  </div>
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
