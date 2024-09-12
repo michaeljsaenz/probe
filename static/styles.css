@@ -244,3 +244,30 @@
   opacity: 1;
   transition: opacity 1s ease-out;
 }
+
+.icon-wrapper-back-to-pod {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 3px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: rgba(108, 117, 125, 0.95);
+}
+
+.clickable-icon-back-to-pod {
+  font-size: 1rem;
+  text-decoration: none;
+  color: #fff;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+body.light-mode .clickable-icon-back-to-pod {
+  color: #6c757d;
+}
+
+.clickable-icon-back-to-pod:hover {
+  color: #2aaa8a;
+}

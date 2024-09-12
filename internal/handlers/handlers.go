@@ -346,7 +346,7 @@ func DropdownNamespaceSelection(w http.ResponseWriter, r *http.Request) {
 		config = customValues.Config
 	}
 
-	types.UpdateSharedContextK8s(clientset, config, namespace)
+	types.UpdateSharedContextK8s(clientset, config, namespace, "")
 
 	application := types.NewApplication(types.Application{K8sSelectedNamespace: namespace, Error: err})
 
@@ -368,7 +368,6 @@ func ButtonGetPods(w http.ResponseWriter, r *http.Request) {
 	if ok {
 		clientset = customValues.Clientset
 		namespace = customValues.Namespace
-
 	}
 
 	pods, err := k8s.GetPodsInNamespace(clientset, namespace)
@@ -480,7 +479,9 @@ func ButtonPodDetail(w http.ResponseWriter, r *http.Request) {
 	var podDetail types.PodDetail
 	var fs embed.FS
 	var clientset *kubernetes.Clientset
+	var config *rest.Config
 
+	// directly from form
 	pod := strings.TrimSpace(r.PostFormValue("pod"))
 	namespace := strings.TrimSpace(r.PostFormValue("namespace"))
 
@@ -494,9 +495,17 @@ func ButtonPodDetail(w http.ResponseWriter, r *http.Request) {
 	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
 	if ok {
 		clientset = customValues.Clientset
+		config = customValues.Config
 		if namespace == "" {
 			namespace = customValues.Namespace
 		}
+		if pod == "" {
+			pod = customValues.Pod
+		}
+	}
+
+	if pod != "" {
+		types.UpdateSharedContextK8s(clientset, config, namespace, pod)
 	}
 
 	if pod != "" {
@@ -579,7 +588,7 @@ func ClearContextK8sNamespace(w http.ResponseWriter, r *http.Request) {
 		config = customValues.Config
 	}
 
-	types.UpdateSharedContextK8s(clientset, config, "")
+	types.UpdateSharedContextK8s(clientset, config, "", "")
 
 }
 
@@ -615,7 +624,7 @@ func ClickContainerLog(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{K8sPodLog: podLog, Error: err})
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-display.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "get-container-log", application)
 	if err != nil {

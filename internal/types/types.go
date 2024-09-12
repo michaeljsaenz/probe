@@ -58,6 +58,7 @@ type CustomContextValuesK8s struct {
 	Clientset *kubernetes.Clientset
 	Config    *rest.Config
 	Namespace string
+	Pod       string
 }
 
 type CustomContextKey string
@@ -134,12 +135,13 @@ func UpdateSharedContextFS(httpFS embed.FS) {
 var SharedContextK8s context.Context = context.Background()
 var ContextLockK8s sync.Mutex
 
-func UpdateSharedContextK8s(clienset *kubernetes.Clientset, config *rest.Config, namespace string) {
+func UpdateSharedContextK8s(clienset *kubernetes.Clientset, config *rest.Config, namespace, pod string) {
 	ContextLockK8s.Lock()
 	defer ContextLockK8s.Unlock()
 	SharedContextK8s = context.WithValue(SharedContextK8s, ContextKey, CustomContextValuesK8s{
 		Clientset: clienset,
 		Config:    config,
 		Namespace: namespace,
+		Pod:       pod,
 	})
 }
