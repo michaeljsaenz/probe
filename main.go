@@ -9,7 +9,7 @@ import (
 	"github.com/michaeljsaenz/probe/internal/utils"
 )
 
-//go:embed static/* templates/*
+//go:embed static/* templates/* templates/*/*
 var fs embed.FS
 
 func main() {
