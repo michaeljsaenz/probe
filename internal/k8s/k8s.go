@@ -58,8 +58,10 @@ func GetClientSet() {
 		log.Fatal("kubeconfig error: ", err)
 	}
 
-	// Override the TLSClientConfig to skip certificate verification
-	config.TLSClientConfig = rest.TLSClientConfig{Insecure: true}
+	// Allow insecure TLS
+	config.CAFile = ""
+	config.CAData = []byte{}
+	config.Insecure = true
 
 	// create the clientset
 	clientset, err := kubernetes.NewForConfig(config)
@@ -69,7 +71,7 @@ func GetClientSet() {
 
 	var namespace, pod string
 
-	//retrieve k8s clientset/namespace from shared context
+	//retrieve k8s updates from shared context
 	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
 	if ok {
 		namespace = customValues.Namespace
