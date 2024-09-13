@@ -3,13 +3,7 @@
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
-  <!-- delete on load container-input -->
-    <div
-      hx-trigger="load" 
-      hx-post="#" 
-      hx-target="#container-input" 
-      hx-swap="delete"
-    ></div>
+  {{ template "k8s-htmx-delete-on-load-container-input" . }}
   {{ if ne ( len .K8sPods) 0 }}
     <table class="table table-hover no-table-margin-bottom">
       <thead>
@@ -79,13 +73,7 @@
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
-  <!-- delete on load container-input -->
-    <div
-      hx-trigger="load" 
-      hx-post="#" 
-      hx-target="#container-input" 
-      hx-swap="delete"
-    ></div>
+  {{ template "k8s-htmx-delete-on-load-container-input" . }}
   {{ if ne .K8sPodDetail.PodName "" }}
     <table class="table table-hover no-table-margin-bottom">
       <thead>
@@ -113,7 +101,7 @@
               hx-vals='{"pod": "{{ $.K8sPodDetail.PodName }}",
                         "namespace": "{{ $.K8sPodDetail.PodNamespace }}" }'
               >
-                <i class="fa-solid fa-file-code fs-5"></i>
+                <i class="fa-solid fa-file-code fs-5" title="YAML"></i>
               </a>
           </td>
           <td> {{ .K8sPodDetail.PodName }} </td>
@@ -133,6 +121,7 @@
                             "ports": "{{ $ports }}",
                             "namespace": "{{ $.K8sPodDetail.PodNamespace }}" }'
                   hx-indicator="#spinner-{{ $container }}"
+                  title="Logs"
                 >
                   {{ $container }}
                   <span
@@ -155,6 +144,7 @@
                             "container": "{{ $container }}",
                             "namespace": "{{ $.K8sPodDetail.PodNamespace }}" }'
                   hx-indicator="#spinner-{{ $container }}-exec"
+                  title="Exec"
                 >
                   {{ $container }}
                   <span
@@ -179,6 +169,7 @@
                               "container": "{{ $container }}",
                               "port": "{{ $port }}",
                               "namespace": "{{ $.K8sPodDetail.PodNamespace }}" }'
+                    title="Port Forward"
                   >
                   {{ $port }} 
                   </a><br>
@@ -246,17 +237,7 @@
 <!-- end container input-->
 <!--start get-pod-port-forward -->
 {{ define "get-pod-port-forward" }}
-  <div class="icon-wrapper-back-to-pod">
-      <a class="clickable-icon-back-to-pod"
-        hx-post="/button-get-pod-detail/"
-        hx-target="#main-display-box"
-        hx-swap="innerHTML transition:true"
-        href="#"
-        hx-trigger="click"
-      >
-      <i class="fa-solid fa-circle-arrow-left"></i><span> Pod</span>
-      </a>
-  </div>
+  {{ template "k8s-pod-back-btn-icon" . }}
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ else }}
@@ -277,7 +258,7 @@
 {{ define "get-namespaces" }}
   {{ if .Error }}
     <div
-      class="mt-5 custom-container"
+      class="mt-2 custom-container"
       id="main-display-box"
       hx-swap-oob="true"
       hx-swap="innerHTML transition:true"
@@ -302,17 +283,7 @@
 {{ end }}
 <!-- start of get-pod-yaml -->
 {{ define "get-pod-yaml" }}
-  <div class="icon-wrapper-back-to-pod">
-      <a class="clickable-icon-back-to-pod"
-        hx-post="/button-get-pod-detail/"
-        hx-target="#main-display-box"
-        hx-swap="innerHTML transition:true"
-        href="#"
-        hx-trigger="click"
-      >
-      <i class="fa-solid fa-circle-arrow-left"></i><span> Pod</span>
-      </a>
-  </div>
+  {{ template "k8s-pod-back-btn-icon" . }}
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
@@ -322,17 +293,7 @@
 {{ end }}
 <!-- start of get-pod-log -->
 {{ define "get-container-log" }}
-  <div class="icon-wrapper-back-to-pod">
-      <a class="clickable-icon-back-to-pod"
-        hx-post="/button-get-pod-detail/"
-        hx-target="#main-display-box"
-        hx-swap="innerHTML transition:true"
-        href="#"
-        hx-trigger="click"
-      >
-      <i class="fa-solid fa-circle-arrow-left"></i><span> Pod</span>
-      </a>
-  </div>
+  {{ template "k8s-pod-back-btn-icon" . }}
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}

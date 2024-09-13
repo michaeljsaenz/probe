@@ -1,0 +1,15 @@
+<!-- k8s-pod-back-btn-icon.gohtml -->
+{{ define "k8s-pod-back-btn-icon" }}
+  <div class="icon-wrapper-back-to-pod">
+    <a
+      class="clickable-icon-back-to-pod"
+      hx-post="/button-get-pod-detail/"
+      hx-target="#main-display-box"
+      hx-swap="innerHTML transition:true"
+      href="#"
+      hx-trigger="click"
+    >
+      <i class="fa-solid fa-circle-arrow-left"></i><span> Pod</span>
+    </a>
+  </div>
+{{ end }}

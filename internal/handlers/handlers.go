@@ -102,7 +102,7 @@ func KubernetesTemplate(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{Error: err})
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-*.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-*.gohtml", "templates/k8s/*.gohtml"))
 
 	err = tmpl.Execute(w, application)
 	if err != nil {
@@ -383,7 +383,7 @@ func ButtonGetPods(w http.ResponseWriter, r *http.Request) {
 		fs = customValueFS.HttpFS
 	}
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/k8s/*.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "get-pods", application)
 	if err != nil {
@@ -419,7 +419,7 @@ func ButtonGetNodes(w http.ResponseWriter, r *http.Request) {
 		fs = customValueFS.HttpFS
 	}
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/k8s/*.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "get-nodes", application)
 	if err != nil {
@@ -461,7 +461,7 @@ func ButtonGetNamespaces(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{K8sNamespaces: namespaces, Error: err})
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/k8s/*.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "get-namespaces", application)
 	if err != nil {
@@ -517,7 +517,7 @@ func ButtonPodDetail(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{K8sPodDetail: podDetail, Error: err})
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/k8s/*.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "get-pod-details", application)
 	if err != nil {
@@ -563,7 +563,7 @@ func ClickPodYaml(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{K8sPodYaml: podYaml, Error: err})
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/k8s/*.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "get-pod-yaml", application)
 	if err != nil {
@@ -624,7 +624,7 @@ func ClickContainerLog(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{K8sPodLog: podLog, Error: err})
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-display.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-display.gohtml", "templates/k8s/*.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "get-container-log", application)
 	if err != nil {
@@ -675,7 +675,7 @@ func ClickContainerPort(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{K8sPodPortForward: pf, Error: err})
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/k8s/*.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "get-pod-port-forward", application)
 	if err != nil {
@@ -729,7 +729,7 @@ func SubmitContainerExec(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{K8sContainerDetail: containerDetail, Error: err})
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-display.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-display.gohtml", "templates/k8s/*.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "submit-container-exec", application)
 	if err != nil {
@@ -764,7 +764,7 @@ func ClickContainerExec(w http.ResponseWriter, r *http.Request) {
 
 	application := types.NewApplication(types.Application{K8sContainerDetail: containerDetail, Error: err})
 
-	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-display.gohtml"))
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/main-display.gohtml", "templates/k8s/*.gohtml"))
 
 	err = tmpl.ExecuteTemplate(w, "click-container-exec", application)
 	if err != nil {

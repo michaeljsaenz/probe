@@ -1,0 +1,9 @@
+<!-- k8s-htmx-delete-on-load-container-input.gohtml -->
+{{ define "k8s-htmx-delete-on-load-container-input" }}
+  <div
+    hx-trigger="load"
+    hx-post="#"
+    hx-target="#container-input"
+    hx-swap="delete"
+  ></div>
+{{ end }}
