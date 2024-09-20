@@ -161,8 +161,8 @@
                 {{ range $port := $ports }}
                   <a
                     hx-post="/click-container-port/"
-                    hx-target="#main-display-box"
-                    hx-swap="textContent transition:true"
+                    hx-target="#modal-body"
+                    hx-swap="innerHTML"
                     href="#"
                     hx-trigger="click"
                     hx-vals='{"pod": "{{ $.K8sPodDetail.PodName }}",
@@ -170,9 +170,27 @@
                               "port": "{{ $port }}",
                               "namespace": "{{ $.K8sPodDetail.PodNamespace }}" }'
                     title="Port Forward"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#click-container-port-modal"
                   >
-                  {{ $port }} 
+                  {{ $port }}
                   </a><br>
+                  <!-- Modal -->
+                  <div class="modal fade" id="click-container-port-modal" tabindex="-1" aria-labelledby="click-container-port-modal-label" aria-hidden="true">
+                      <div class="modal-dialog" role="document">
+                          <div class="modal-content">
+                              <div class="modal-header">
+                                  <i class="fa-solid fa-square-arrow-up-right fs-5 me-2"></i><h5 class="modal-title" id="exampleModalLabel">Port Forward</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body" id="modal-body">
+                              </div>
+                              <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary custom-hover-color-change" data-bs-dismiss="modal">Close</button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
                 {{ end }}
               {{ end }}
           </td>
@@ -235,14 +253,13 @@
       {{ template "main-display" . }}
 {{ end }}
 <!-- end container input-->
-<!--start get-pod-port-forward -->
-{{ define "get-pod-port-forward" }}
-  {{ template "k8s-pod-back-btn-icon" . }}
+<!--start click-container-port -->
+{{ define "click-container-port" }}
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ else }}
     {{ if ne .K8sPodPortForward.URL "" }}
-      <p>Forwarding from <a href="{{ .K8sPodPortForward.URL }}" target="_blank">{{ .K8sPodPortForward.URL }}</a> -> {{ .K8sPodPortForward.PodPort }}</p>
+      <p>Forwarding from <a href="{{ .K8sPodPortForward.URL }}" target="_blank">{{ .K8sPodPortForward.URL }}</a> <i class="fa-solid fa-arrow-right"></i> {{ .K8sPodPortForward.PodPort }}</p>
     {{ end }}
   {{ end }}
 {{ end }}

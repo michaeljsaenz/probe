@@ -677,7 +677,7 @@ func ClickContainerPort(w http.ResponseWriter, r *http.Request) {
 
 	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/k8s/*.gohtml"))
 
-	err = tmpl.ExecuteTemplate(w, "get-pod-port-forward", application)
+	err = tmpl.ExecuteTemplate(w, "click-container-port", application)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
