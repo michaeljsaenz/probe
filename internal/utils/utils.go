@@ -94,3 +94,23 @@ func FindLocalPort(startingLocalPort int) (localPort string, err error) {
 	}
 
 }
+
+func FormatDuration(d time.Duration) string {
+	days := d / (24 * time.Hour)
+	d -= days * 24 * time.Hour
+	hours := d / time.Hour
+	d -= hours * time.Hour
+	minutes := d / time.Minute
+	d -= minutes * time.Minute
+	seconds := d / time.Second
+
+	if days > 0 {
+		return fmt.Sprintf("%dd%dh", days, hours)
+	} else if hours > 0 {
+		return fmt.Sprintf("%dh%dm", hours, minutes)
+	} else if minutes > 0 {
+		return fmt.Sprintf("%dm%ds", minutes, seconds)
+	} else {
+		return fmt.Sprintf("%ds", seconds)
+	}
+}

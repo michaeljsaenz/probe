@@ -456,7 +456,7 @@ func ButtonGetNamespaces(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("error: %v", err)
 	}
-	allNamespaces := "all namespaces"
+	allNamespaces := "All Namespaces"
 	namespaces = append(namespaces, allNamespaces)
 
 	application := types.NewApplication(types.Application{K8sNamespaces: namespaces, Error: err})

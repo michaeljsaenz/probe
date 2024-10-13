@@ -112,7 +112,7 @@ func GetNamespaces(c *kubernetes.Clientset) (namespaces []string, err error) {
 func GetPodsInNamespace(c *kubernetes.Clientset, namespace string) ([]types.K8sPod, error) {
 	var K8sPods []types.K8sPod
 
-	if namespace == "all namespaces" {
+	if namespace == "All Namespaces" {
 		namespace = ""
 	}
 
@@ -156,9 +156,15 @@ func GetNodes(c *kubernetes.Clientset) ([]types.K8sNode, types.K8sNodesDetail, e
 				break
 			}
 		}
+
+		creationTime := node.ObjectMeta.CreationTimestamp.Time
+		ageTime := time.Since(creationTime)
+		age := utils.FormatDuration(ageTime)
+
 		k8sNode := types.K8sNode{
 			Name:   node.Name,
 			Status: status,
+			Age:    age,
 		}
 		K8sNodes = append(K8sNodes, k8sNode)
 	}

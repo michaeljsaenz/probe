@@ -56,16 +56,33 @@
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ else }}
-    {{ if ne .K8sNodesDetail.TotalCount 0 }}
-      <p>Total Node Count: {{ .K8sNodesDetail.TotalCount }}</p>
-    {{ end }}
-    {{ range $node := .K8sNodes }}
-      {{ if eq $node.Status "Ready" }}
-        <p>{{ $node.Name }} &#9989; {{ $node.Status }}</p>
-      {{ else }}
-        <p>{{ $node.Name }} &#10060; {{ $node.Status }}</p>
+    {{ $totalNodeCount := .K8sNodesDetail.TotalCount }}
+    <table class="table table-hover no-table-margin-bottom">
+      <thead>
+        <tr>
+          <th scope="col">Node Name <span class="badge custom-badge">Total: {{ $totalNodeCount }}</span></th>
+          <th scope="col">Status</th>
+          <th scope="col">Age</th>
+        </tr>
+      </thead>
+      <tbody>   
+      {{ if ne $totalNodeCount 0 }}
+        {{ range $node := .K8sNodes }}
+        <tr>
+          <td>
+          {{ if eq $node.Status "Ready" }}
+            &#9989;&nbsp;{{ $node.Name }}
+          {{ else }}
+            &#10060;&nbsp;{{ $node.Name }}
+          {{ end }}
+          </td>
+          <td>{{ $node.Status}}</td>
+          <td>{{ $node.Age}}</td>
+        </tr>
+        {{ end }}
       {{ end }}
-    {{ end }}
+      </tbody>
+    </table>
   {{ end }}
 {{ end }}
 <!--start get-pod-details -->
