@@ -275,6 +275,4 @@ body.light-mode .clickable-icon-back-to-pod {
 .custom-badge {
   background-color: #2aaa8a;
   color: white;
-  {{/* padding: 0.25em 0.4em;
-  border-radius: 0.5rem; */}}
 }
