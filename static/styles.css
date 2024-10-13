@@ -271,3 +271,10 @@ body.light-mode .clickable-icon-back-to-pod {
 .clickable-icon-back-to-pod:hover {
   color: #2aaa8a;
 }
+
+.custom-badge {
+  background-color: #2aaa8a;
+  color: white;
+  {{/* padding: 0.25em 0.4em;
+  border-radius: 0.5rem; */}}
+}

@@ -28,6 +28,7 @@ type K8sContainerDetail struct {
 type K8sNode struct {
 	Name   string
 	Status string
+	Age    string
 }
 
 type K8sPodPortForward struct {
