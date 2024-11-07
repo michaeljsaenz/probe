@@ -1,9 +1,9 @@
 <!-- start of get-pods -->
 {{ define "get-pods" }}
+  {{ template "k8s-htmx-delete-on-load-container-input" . }}
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
-  {{ template "k8s-htmx-delete-on-load-container-input" . }}
   {{ if ne ( len .K8sPods) 0 }}
     <table class="table table-hover no-table-margin-bottom">
       <thead>
@@ -53,6 +53,7 @@
 {{ end }}
 <!-- start of get-nodes -->
 {{ define "get-nodes" }}
+  {{ template "k8s-htmx-delete-on-load-container-input" . }}
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ else }}
@@ -140,7 +141,7 @@
                   hx-indicator="#spinner-{{ $container }}"
                   title="Logs"
                 >
-                  {{ $container }}
+                  {{ $container -}}
                   <span
                     class="spinner-border spinner-border-sm htmx-indicator"
                     id="spinner-{{ $container }}"
@@ -163,7 +164,7 @@
                   hx-indicator="#spinner-{{ $container }}-exec"
                   title="Exec"
                 >
-                  {{ $container }}
+                  {{ $container -}}
                   <span
                     class="spinner-border spinner-border-sm htmx-indicator"
                     id="spinner-{{ $container }}-exec"
