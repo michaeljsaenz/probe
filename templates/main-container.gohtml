@@ -3,9 +3,9 @@
   <div class="container" id="main-container">
     <div class="col-12">
       <div class="mt-5">
-        <div class="row">
-          <div class="col-md-8 mb-2">
-            <div class="d-flex mb-5">
+        <div class="row mb-5">
+          <div class="col-md-8">
+            <div class="d-flex">
               <div class="me-2">
                 <!-- pod button-->
                 <button
@@ -45,7 +45,7 @@
             </div>
           </div>
           <!-- namespace button -->
-          <div class="col-md-4 mb-2 d-flex justify-content-end">
+          <div class="col-md-4 d-flex justify-content-end">
             <div class="dropdown">
               <button
                 class="btn btn-secondary btn-md dropdown-toggle btn-equal-width"
@@ -83,6 +83,7 @@
         hx-trigger="load"
         hx-swap="none"
       ></div>
+      <div id="title-main-display"></div>
       <a id="scroll-target"></a>
       <!-- center display -->
       {{ template "main-display" . }}

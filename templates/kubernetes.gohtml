@@ -1,6 +1,6 @@
 <!-- start of get-pods -->
 {{ define "get-pods" }}
-  {{ template "k8s-htmx-delete-on-load-container-input" . }}
+  {{ template "k8s-htmx-on-load-delete-elements" . }}
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
@@ -53,7 +53,7 @@
 {{ end }}
 <!-- start of get-nodes -->
 {{ define "get-nodes" }}
-  {{ template "k8s-htmx-delete-on-load-container-input" . }}
+  {{ template "k8s-htmx-on-load-delete-elements" . }}
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ else }}
@@ -73,8 +73,30 @@
           <td>
           {{ if eq $node.Status "Ready" }}
             &#9989;&nbsp;{{ $node.Name }}
+            <span class="badge custom-badge"
+              hx-post="/button-get-node-conditions/"
+              hx-target="#main-display-box"
+              hx-swap="innerHTML transition:true"
+              href="#"
+              hx-trigger="click"
+              hx-vals='{"node": "{{ $node.Name }}"}'
+              style="cursor: pointer;"
+            >
+              conditions
+            </span>
           {{ else }}
             &#10060;&nbsp;{{ $node.Name }}
+            <span class="badge custom-badge"
+              hx-post="/button-get-node-conditions/"
+              hx-target="#main-display-box"
+              hx-swap="innerHTML transition:true"
+              href="#"
+              hx-trigger="click"
+              hx-vals='{"node": "{{ $node.Name }}"}'
+              style="cursor: pointer;"
+            >
+              conditions
+            </span>
           {{ end }}
           </td>
           <td>{{ $node.Status}}</td>
@@ -86,12 +108,43 @@
     </table>
   {{ end }}
 {{ end }}
+<!-- start of get-node-conditions -->
+{{ define "get-node-conditions" }}
+  {{ if .Error }} 
+    <p>{{ .Error }}</p>
+  {{ end }}
+  {{ if ne .K8sNode.Name "" }}
+    <div class="fs-4 d-flex justify-content-center" id="title-main-display" hx-swap-oob="true">
+      <span>{{ .K8sNode.Name }}</span>
+    </div>
+    <table class="table table-hover no-table-margin-bottom">
+      <thead>
+        <tr>
+          <th scope="col">Type</th>
+          <th scope="col">Status</th>
+          <th scope="col">Reason</th>
+          <th scope="col">Message</th>
+        </tr>
+      </thead>
+      <tbody>
+          {{ range $condition := .K8sNode.NodeConditions }}
+            <tr>
+              <td>{{ $condition.Type }}</td>
+              <td>{{ $condition.Status }}</td>
+              <td>{{ $condition.Reason }}</td>
+              <td>{{ $condition.Message }}</td>
+            </tr>
+          {{ end }}
+      </tbody>
+    </table>
+  {{ end }}
+{{ end }}
 <!--start get-pod-details -->
 {{ define "get-pod-details" }}
+  {{ template "k8s-htmx-on-load-delete-elements" . }}
   {{ if .Error }}
     <p>{{ .Error }}</p>
   {{ end }}
-  {{ template "k8s-htmx-delete-on-load-container-input" . }}
   {{ if ne .K8sPodDetail.PodName "" }}
     <table class="table table-hover no-table-margin-bottom">
       <thead>

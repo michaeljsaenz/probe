@@ -1,9 +1,16 @@
-<!-- k8s-htmx-delete-on-load-container-input.gohtml -->
-{{ define "k8s-htmx-delete-on-load-container-input" }}
+<!-- k8s-htmx-on-load-delete-elements.gohtml -->
+{{ define "k8s-htmx-on-load-delete-elements" }}
   <div
     hx-trigger="load"
     hx-post="#"
     hx-target="#container-input"
     hx-swap="delete"
+  ></div>
+  <div
+    hx-post="/button-get-node-conditions/"
+    hx-target="#title-main-display"
+    hx-swap="textContent"
+    href="#"
+    hx-trigger="load"
   ></div>
 {{ end }}
