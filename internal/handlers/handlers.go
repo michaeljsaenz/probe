@@ -429,6 +429,51 @@ func ButtonGetNodes(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func ButtonGetNodeConditions(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+	var clientset *kubernetes.Clientset
+	var fs embed.FS
+	var k8sNode types.K8sNode
+	var err error
+
+	//retrieve k8s clientset from shared context
+	customValues, ok := types.SharedContextK8s.Value(types.ContextKey).(types.CustomContextValuesK8s)
+	if ok {
+		clientset = customValues.Clientset
+	}
+
+	// directly from form
+	node := strings.TrimSpace(r.PostFormValue("node"))
+	if node == "" {
+		k8sNode.Name = node
+	} else {
+		k8sNode, err = k8s.GetNodeConditions(clientset, node)
+		if err != nil {
+			log.Printf("error: %v", err)
+		}
+	}
+
+	application := types.NewApplication(types.Application{K8sNode: k8sNode, Error: err})
+
+	// retrieve embed.FS from shared context
+	customValueFS, ok := types.SharedContextFS.Value(types.ContextKey).(types.CustomContextValuesFS)
+	if ok {
+		fs = customValueFS.HttpFS
+	}
+
+	tmpl := template.Must(template.ParseFS(fs, "templates/kubernetes.gohtml", "templates/k8s/*.gohtml"))
+
+	err = tmpl.ExecuteTemplate(w, "get-node-conditions", application)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+}
+
 func ButtonGetNamespaces(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost && !strings.Contains(r.Header.Get("HX-Request"), "true") {
 		http.Error(w, "Bad Request", http.StatusBadRequest)

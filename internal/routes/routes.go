@@ -25,6 +25,7 @@ func RegisterRoutes(fs embed.FS) {
 	http.HandleFunc("/button-get-pod-detail/", handlers.ButtonPodDetail)
 	http.HandleFunc("/click-get-pod-yaml/", handlers.ClickPodYaml)
 	http.HandleFunc("/button-get-nodes/", handlers.ButtonGetNodes)
+	http.HandleFunc("/button-get-node-conditions/", handlers.ButtonGetNodeConditions)
 	http.HandleFunc("/button-get-namespaces/", handlers.ButtonGetNamespaces)
 	http.HandleFunc("/dropdown-namespace-selection/", handlers.DropdownNamespaceSelection)
 	http.HandleFunc("/clear-context-k8s-ns/", handlers.ClearContextK8sNamespace)

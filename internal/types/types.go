@@ -26,9 +26,10 @@ type K8sContainerDetail struct {
 }
 
 type K8sNode struct {
-	Name   string
-	Status string
-	Age    string
+	Name           string
+	Status         string
+	Age            string
+	NodeConditions []K8sNodeCondition
 }
 
 type K8sPodPortForward struct {
@@ -40,6 +41,13 @@ type K8sPod struct {
 	Name      string
 	Namespace string
 	Status    string
+}
+
+type K8sNodeCondition struct {
+	Type    string
+	Status  string
+	Reason  string
+	Message string
 }
 
 type K8sNodesDetail struct {
@@ -79,6 +87,7 @@ type Application struct {
 	K8sSelectedNamespace string
 	K8sPods              []K8sPod
 	K8sPodDetail         PodDetail
+	K8sNode              K8sNode
 	K8sNodes             []K8sNode
 	K8sNodesDetail       K8sNodesDetail
 	K8sPodYaml           string
@@ -101,6 +110,7 @@ func NewApplication(application Application) Application {
 		K8sSelectedNamespace: application.K8sSelectedNamespace,
 		K8sPods:              application.K8sPods,
 		K8sPodDetail:         application.K8sPodDetail,
+		K8sNode:              application.K8sNode,
 		K8sNodes:             application.K8sNodes,
 		K8sNodesDetail:       application.K8sNodesDetail,
 		K8sPodYaml:           application.K8sPodYaml,

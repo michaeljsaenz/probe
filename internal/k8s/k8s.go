@@ -168,8 +168,32 @@ func GetNodes(c *kubernetes.Clientset) ([]types.K8sNode, types.K8sNodesDetail, e
 		}
 		K8sNodes = append(K8sNodes, k8sNode)
 	}
-
 	return K8sNodes, nodesDetail, nil
+}
+
+func GetNodeConditions(c *kubernetes.Clientset, nodeName string) (types.K8sNode, error) {
+
+	node, err := c.CoreV1().Nodes().Get(context.TODO(), nodeName, v1.GetOptions{})
+
+	if err != nil {
+		return types.K8sNode{}, err
+	}
+
+	var nodeConditions []types.K8sNodeCondition
+	for _, condition := range node.Status.Conditions {
+		nodeConditions = append(nodeConditions, types.K8sNodeCondition{
+			Type:    string(condition.Type),
+			Status:  string(condition.Status),
+			Reason:  condition.Reason,
+			Message: condition.Message,
+		})
+	}
+
+	var k8sNode types.K8sNode
+	k8sNode.Name = node.Name
+	k8sNode.NodeConditions = nodeConditions
+
+	return k8sNode, nil
 
 }
 
